@@ -2,7 +2,9 @@ package listener
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 type Listener interface {
@@ -23,6 +25,8 @@ const (
 	TypeWebsocketClear  ListenerType = "WS"
 	TypeWebsocketSecure ListenerType = "WSS"
 )
+
+var defaultShutdownTimeout = 10 * time.Second
 
 type ListenerConfig struct {
 	Type        ListenerType
@@ -93,4 +97,9 @@ func ValidateListener(config ListenerConfig) error {
 	}
 
 	return nil
+}
+
+func NewID() string {
+	id := fmt.Sprintf("listener_%06d", rand.Intn(1000000))
+	return id
 }

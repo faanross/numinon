@@ -25,7 +25,6 @@ type Listener struct {
 }
 
 func (f *ListenerFactory) NewListener(ip string, port string) *Listener {
-	id := fmt.Sprintf("listener_%06d", rand.Intn(1000000))
 
 	r := chi.NewRouter()
 
@@ -37,18 +36,6 @@ func (f *ListenerFactory) NewListener(ip string, port string) *Listener {
 		Port:   port,
 		Router: r,
 	}
-}
-
-func (l *Listener) Start() error {
-	addr := fmt.Sprintf("%s:%s", l.IP, l.Port)
-	fmt.Printf("Listening on %s\n", addr)
-
-	l.Server = &http.Server{
-		Addr:    addr,
-		Handler: l.Router,
-	}
-
-	return l.Server.ListenAndServe()
 }
 
 func (l *Listener) Stop() error {
