@@ -1,0 +1,70 @@
+package factory
+
+import (
+	"context"
+	"fmt"
+	"github.com/go-chi/chi/v5"
+	"math/rand"
+	"net/http"
+	"numinon_shadow/internal/router"
+	"time"
+)
+
+type ListenerFactory struct{}
+
+func NewListenerFactory() *ListenerFactory {
+	return &ListenerFactory{}
+}
+
+type Listener struct {
+	ID     string
+	IP     string
+	Port   string
+	Router *chi.Mux
+	Server *http.Server
+}
+
+func (f *ListenerFactory) NewListener(ip string, port string) *Listener {
+	id := fmt.Sprintf("listener_%06d", rand.Intn(1000000))
+
+	r := chi.NewRouter()
+
+	router.SetupRoutes(r)
+
+	return &Listener{
+		ID:     id,
+		IP:     ip,
+		Port:   port,
+		Router: r,
+	}
+}
+
+func (l *Listener) Start() error {
+	addr := fmt.Sprintf("%s:%s", l.IP, l.Port)
+	fmt.Printf("Listening on %s\n", addr)
+
+	l.Server = &http.Server{
+		Addr:    addr,
+		Handler: l.Router,
+	}
+
+	return l.Server.ListenAndServe()
+}
+
+func (l *Listener) Stop() error {
+	if l.Server == nil {
+		return fmt.Errorf("listener not started")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := l.Server.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to shutdown server gracefully")
+	}
+
+	fmt.Printf("Successfully shut down listener with ID: %s (port: %s)\n", l.ID, l.Port)
+	return nil
+
+}
