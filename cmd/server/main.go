@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"log"
-	"numinon_shadow/internal/factory"
+	"numinon_shadow/internal/listener"
+	"numinon_shadow/internal/router"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,29 +20,24 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	stopChan := make(chan struct{})
 
-	newFactory := factory.NewListenerFactory()
+	// We move setting up our main router + routes back here from factory.go
+	// We only ever create one router, it is recycled for each listener
+	r := chi.NewRouter()
+	router.SetupRoutes(r)
 
-	var listeners []*factory.Listener
+	// we need to create our new config
 
-	for _, port := range serverPorts {
-		l := newFactory.NewListener(serverAddr, port)
-		listeners = append(listeners, l)
+	newConfig := listener.NewListenerConfig(listener.TypeHTTP1Clear, serverAddr, "7777", r)
 
-		go func(l *factory.Listener) {
-			log.Printf("Starting listener %s listening on port %s", l.ID, l.Port)
-			err := l.Start()
-			select {
-			case <-stopChan:
-				return
-			default:
-				if err != nil {
-					log.Printf("Error starting listener: %s", err)
-				}
-			}
-		}(l)
+	newListener, err := listener.NewListener(*newConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	err = newListener.Start()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	time.Sleep(1 * time.Second)
@@ -48,25 +45,10 @@ func main() {
 
 	<-sigChan
 
-	StopListeners(listeners, stopChan)
-
 	time.Sleep(1 * time.Second)
 
 	fmt.Println("All listeners stopped, now shutting down server...")
 
 	log.Printf("Shutting down server at %s", serverAddr)
 
-}
-
-func StopListeners(listeners []*factory.Listener, stopChan chan struct{}) {
-
-	close(stopChan)
-	
-	for _, l := range listeners {
-		err := l.Stop()
-		if err != nil {
-			log.Printf("Error stopping listener: %s", err)
-		}
-
-	}
 }

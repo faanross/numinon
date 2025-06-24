@@ -37,6 +37,18 @@ type ListenerConfig struct {
 	TLSKeyPath  string
 }
 
+func NewListenerConfig(lType ListenerType, ip string, port string, lHandler http.Handler) *ListenerConfig {
+
+	return &ListenerConfig{
+		Type:        lType,
+		IP:          ip,
+		Port:        port,
+		Handler:     lHandler,
+		TLSCertPath: "cert.pem",
+		TLSKeyPath:  "key.pem",
+	}
+}
+
 func NewListener(config ListenerConfig) (Listener, error) {
 	err := ValidateListener(config)
 
@@ -44,13 +56,13 @@ func NewListener(config ListenerConfig) (Listener, error) {
 		return nil, err
 	}
 
+	id := NewID()
+
 	// --- Switch based on Listener Type ---
 	switch config.Type {
 
 	case TypeHTTP1Clear:
-
-		return nil, fmt.Errorf("protocol not yet implemented")
-		//return newHttp1ClearListener(listenerID, config)
+		return NewHTTP1ClearListener(id, config)
 
 	case TypeHTTP1TLS:
 		return nil, fmt.Errorf("protocol not yet implemented")
