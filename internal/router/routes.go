@@ -6,4 +6,5 @@ import (
 
 func SetupRoutes(r *chi.Mux) {
 	r.Get("/", RootHandler)
+	r.Get("/ws", WSHandler)
 }
