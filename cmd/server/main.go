@@ -20,6 +20,7 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	stopChan := make(chan struct{})
 
 	// We move setting up our main router + routes back here from factory.go
 	// We only ever create one router, it is recycled for each listener
@@ -28,16 +29,30 @@ func main() {
 
 	// we need to create our new config
 
-	newConfig := listener.NewListenerConfig(listener.TypeHTTP1Clear, serverAddr, "7777", r)
+	var activeListeners []listener.Listener
 
-	newListener, err := listener.NewListener(*newConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
+	for _, serverPort := range serverPorts {
+		newConfig := listener.NewListenerConfig(listener.TypeHTTP1Clear, serverAddr, serverPort, r)
 
-	err = newListener.Start()
-	if err != nil {
-		log.Fatal(err)
+		l, err := listener.NewListener(*newConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		activeListeners = append(activeListeners, l)
+
+		go func(l listener.Listener) {
+			select {
+			case <-stopChan:
+				return
+			default:
+				err = l.Start()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}(l)
+
 	}
 
 	time.Sleep(1 * time.Second)
@@ -45,10 +60,30 @@ func main() {
 
 	<-sigChan
 
+	log.Println("|🚦 SIG|-> Shutdown signal received.")
+
+	StopAllListener(activeListeners, stopChan)
+
 	time.Sleep(1 * time.Second)
 
 	fmt.Println("All listeners stopped, now shutting down server...")
 
 	log.Printf("Shutting down server at %s", serverAddr)
 
+}
+
+func StopAllListener(listeners []listener.Listener, stopChan chan struct{}) {
+	log.Printf("|🛑 STP|-> Initiating shutdown for %d listener(s)...", len(listeners))
+
+	// Signal the listener goroutines to exit by closing the stopChan.
+	close(stopChan)
+
+	for _, l := range listeners {
+		err := l.Stop()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}
+	log.Println("|🛑 STP|-> All active listeners have been instructed to stop.")
 }

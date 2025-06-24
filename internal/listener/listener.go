@@ -44,8 +44,8 @@ func NewListenerConfig(lType ListenerType, ip string, port string, lHandler http
 		IP:          ip,
 		Port:        port,
 		Handler:     lHandler,
-		TLSCertPath: "cert.pem",
-		TLSKeyPath:  "key.pem",
+		TLSCertPath: "certs/cert.pem",
+		TLSKeyPath:  "certs/key.pem",
 	}
 }
 
