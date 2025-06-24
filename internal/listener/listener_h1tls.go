@@ -24,7 +24,7 @@ func NewHTTP1TLSListener(id string, config ListenerConfig) (Listener, error) {
 		Handler: config.Handler,
 	}
 
-	l := &http1ClearListener{
+	l := &http1TLSListener{
 		id:     id,
 		addr:   fullAddr,
 		config: config, // remember cert and key are inside of config
@@ -38,7 +38,8 @@ func NewHTTP1TLSListener(id string, config ListenerConfig) (Listener, error) {
 
 func (l *http1TLSListener) Start() error {
 
-	err := l.server.ListenAndServe()
+	err := l.server.ListenAndServeTLS(l.config.TLSCertPath, l.config.TLSKeyPath)
+
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Printf("|❗ERR|-> Listener %s (%s) failed: %v", l.id, l.config.Type, err)
 		return fmt.Errorf("listener %s failed: %w", l.id, err)

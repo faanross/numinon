@@ -65,8 +65,7 @@ func NewListener(config ListenerConfig) (Listener, error) {
 		return NewHTTP1ClearListener(id, config)
 
 	case TypeHTTP1TLS:
-		return nil, fmt.Errorf("protocol not yet implemented")
-		//return newHttp1TLSListener(listenerID, config)
+		return NewHTTP1TLSListener(id, config)
 
 	case TypeHTTP2TLS:
 		return nil, fmt.Errorf("protocol not yet implemented")
