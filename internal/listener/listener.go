@@ -68,8 +68,7 @@ func NewListener(config ListenerConfig) (Listener, error) {
 		return NewHTTP1TLSListener(id, config)
 
 	case TypeHTTP2TLS:
-		return nil, fmt.Errorf("protocol not yet implemented")
-		//return newHttp2TLSListener(listenerID, config)
+		return NewHTTP1TLSListener(id, config)
 
 	case TypeHTTP3:
 		return nil, fmt.Errorf("protocol not yet implemented")
@@ -79,7 +78,7 @@ func NewListener(config ListenerConfig) (Listener, error) {
 		return NewWSListener(id, config)
 
 	case TypeWebsocketSecure:
-		return NewWSListener(id, config)
+		return NewWSSListener(id, config)
 
 	default:
 		return nil, fmt.Errorf("unknown listener type specified: %s", config.Type)

@@ -31,7 +31,7 @@ func NewHTTP1TLSListener(id string, config ListenerConfig) (Listener, error) {
 		server: srv,
 	}
 
-	log.Printf("Starting HTTP1TLS listener on %s\n", l.addr)
+	log.Printf("Starting %s listener on %s\n", l.config.Type, l.addr)
 
 	return l, nil
 }
@@ -45,7 +45,7 @@ func (l *http1TLSListener) Start() error {
 		return fmt.Errorf("listener %s failed: %w", l.id, err)
 	}
 
-	log.Printf("Started HTTP1TLS listener on %s\n", l.addr)
+	log.Printf("Started %s listener on %s\n", l.config.Type, l.addr)
 	return nil
 }
 
@@ -60,7 +60,7 @@ func (l *http1TLSListener) Stop() error {
 		log.Printf("|❗ERR|-> Error shutting down listener %s (%s): %v", l.id, l.config.Type, err)
 		return fmt.Errorf("error shutting down listener %s: %w", l.id, err)
 	}
-	log.Printf("Shutting down HTTP1TLS listener on %s\n", l.addr)
+	log.Printf("Shutting down %s listener on %s\n", l.config.Type, l.addr)
 	return nil
 }
 
