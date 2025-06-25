@@ -14,7 +14,7 @@ import (
 
 const serverAddr = "127.0.0.1"
 
-var serverPorts = []string{"7777", "8888", "9999"}
+var serverPorts = []string{"8888"}
 
 func main() {
 
@@ -32,7 +32,7 @@ func main() {
 	var activeListeners []listener.Listener
 
 	for _, serverPort := range serverPorts {
-		newConfig := listener.NewListenerConfig(listener.TypeHTTP1TLS, serverAddr, serverPort, r)
+		newConfig := listener.NewListenerConfig(listener.TypeWebsocketSecure, serverAddr, serverPort, r)
 
 		l, err := listener.NewListener(*newConfig)
 		if err != nil {

@@ -76,12 +76,10 @@ func NewListener(config ListenerConfig) (Listener, error) {
 		//return newHttp3Listener(listenerID, config)
 
 	case TypeWebsocketClear:
-		return nil, fmt.Errorf("protocol not yet implemented")
-		//return newWebsocketClearListener(listenerID, config)
+		return NewWSListener(id, config)
 
 	case TypeWebsocketSecure:
-		return nil, fmt.Errorf("protocol not yet implemented")
-		//return newWebsocketSecureListener(listenerID, config)
+		return NewWSListener(id, config)
 
 	default:
 		return nil, fmt.Errorf("unknown listener type specified: %s", config.Type)
