@@ -71,8 +71,7 @@ func NewListener(config ListenerConfig) (Listener, error) {
 		return NewHTTP1TLSListener(id, config)
 
 	case TypeHTTP3:
-		return nil, fmt.Errorf("protocol not yet implemented")
-		//return newHttp3Listener(listenerID, config)
+		return NewHTTP3Listener(id, config)
 
 	case TypeWebsocketClear:
 		return NewWSListener(id, config)
