@@ -9,10 +9,8 @@ import (
 )
 
 type http1ClearListener struct {
-	id     string
-	addr   string
-	config ListenerConfig //Store original config for ref
-	server *http.Server   // As we saw before we need to access this to shut it down
+	commonListener
+	server *http.Server // As we saw before we need to access this to shut it down
 }
 
 // Now the constructor to implement it
@@ -31,9 +29,11 @@ func NewHTTP1ClearListener(id string, config ListenerConfig) (Listener, error) {
 	}
 
 	l := &http1ClearListener{
-		id:     id,
-		addr:   fullAddr,
-		config: config,
+		commonListener: commonListener{ // Initialize the embedded struct
+			id:     id,
+			addr:   config.IP,
+			config: config,
+		},
 		server: srv,
 	}
 
@@ -63,22 +63,10 @@ func (l *http1ClearListener) Stop() error {
 	err := l.server.Shutdown(ctx)
 	if err != nil {
 		log.Printf("|❗ERR|-> Error shutting down listener %s (%s): %v", l.id, l.config.Type, err)
-		return fmt.Errorf("error shutting down listener %s: %w", l.id, err)
+		return fmt.Errorf("error shutting down listener %s: %w", l.ID(), err)
 	}
 	log.Printf("Shutting down HTTP1Clear listener on %s\n", l.addr)
 	return nil
-}
-
-func (l *http1ClearListener) Addr() string {
-	return l.addr
-}
-
-func (l *http1ClearListener) Type() ListenerType {
-	return l.config.Type
-}
-
-func (l *http1ClearListener) ID() string {
-	return l.id
 }
 
 // Compile-time check for listener implementation

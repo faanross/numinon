@@ -9,9 +9,7 @@ import (
 )
 
 type WSListener struct {
-	id     string
-	addr   string
-	config ListenerConfig
+	commonListener
 	server *http.Server
 }
 
@@ -25,9 +23,11 @@ func NewWSListener(id string, config ListenerConfig) (Listener, error) {
 	}
 
 	l := &WSListener{
-		id:     id,
-		addr:   fullAddr,
-		config: config,
+		commonListener: commonListener{ // Initialize the embedded struct
+			id:     id,
+			addr:   config.IP,
+			config: config,
+		},
 		server: srv,
 	}
 
@@ -61,18 +61,6 @@ func (l *WSListener) Stop() error {
 	}
 	log.Printf("Shutting down WS listener on %s\n", l.addr)
 	return nil
-}
-
-func (l *WSListener) Addr() string {
-	return l.addr
-}
-
-func (l *WSListener) Type() ListenerType {
-	return l.config.Type
-}
-
-func (l *WSListener) ID() string {
-	return l.id
 }
 
 // Compile-time check for listener implementation

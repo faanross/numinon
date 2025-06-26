@@ -9,10 +9,8 @@ import (
 )
 
 type WSSListener struct {
-	id     string
-	addr   string
-	config ListenerConfig //Store original config for ref
-	server *http.Server   // As we saw before we need to access this to shut it down
+	commonListener
+	server *http.Server // As we saw before we need to access this to shut it down
 }
 
 func NewWSSListener(id string, config ListenerConfig) (Listener, error) {
@@ -25,9 +23,11 @@ func NewWSSListener(id string, config ListenerConfig) (Listener, error) {
 	}
 
 	l := &WSSListener{
-		id:     id,
-		addr:   fullAddr,
-		config: config, // remember cert and key are inside of config
+		commonListener: commonListener{ // Initialize the embedded struct
+			id:     id,
+			addr:   config.IP,
+			config: config,
+		},
 		server: srv,
 	}
 
@@ -62,18 +62,6 @@ func (l *WSSListener) Stop() error {
 	}
 	log.Printf("Shutting down WSS listener on %s\n", l.addr)
 	return nil
-}
-
-func (l *WSSListener) Addr() string {
-	return l.addr
-}
-
-func (l *WSSListener) Type() ListenerType {
-	return l.config.Type
-}
-
-func (l *WSSListener) ID() string {
-	return l.id
 }
 
 // Compile-time check for listener implementation

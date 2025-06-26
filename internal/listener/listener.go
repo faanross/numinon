@@ -11,8 +11,8 @@ type Listener interface {
 	Start() error
 	Stop() error
 	Addr() string
-	ID() string
 	Type() ListenerType
+	ID() string
 }
 
 type ListenerType string

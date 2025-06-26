@@ -80,6 +80,7 @@ func StopAllListener(listeners []listener.Listener, stopChan chan struct{}) {
 
 	for _, l := range listeners {
 		err := l.Stop()
+		log.Printf("|🛑 STP|-> Stopping listener [Type: %s, Addr: %s]", l.Type(), l.Addr())
 		if err != nil {
 			log.Fatal(err)
 		}

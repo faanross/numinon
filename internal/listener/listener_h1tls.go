@@ -9,10 +9,8 @@ import (
 )
 
 type http1TLSListener struct {
-	id     string
-	addr   string
-	config ListenerConfig //Store original config for ref
-	server *http.Server   // As we saw before we need to access this to shut it down
+	commonListener
+	server *http.Server // As we saw before we need to access this to shut it down
 }
 
 func NewHTTP1TLSListener(id string, config ListenerConfig) (Listener, error) {
@@ -25,9 +23,11 @@ func NewHTTP1TLSListener(id string, config ListenerConfig) (Listener, error) {
 	}
 
 	l := &http1TLSListener{
-		id:     id,
-		addr:   fullAddr,
-		config: config, // remember cert and key are inside of config
+		commonListener: commonListener{ // Initialize the embedded struct
+			id:     id,
+			addr:   config.IP,
+			config: config,
+		},
 		server: srv,
 	}
 
@@ -62,18 +62,6 @@ func (l *http1TLSListener) Stop() error {
 	}
 	log.Printf("Shutting down %s listener on %s\n", l.config.Type, l.addr)
 	return nil
-}
-
-func (l *http1TLSListener) Addr() string {
-	return l.addr
-}
-
-func (l *http1TLSListener) Type() ListenerType {
-	return l.config.Type
-}
-
-func (l *http1TLSListener) ID() string {
-	return l.id
 }
 
 // Compile-time check for listener implementation

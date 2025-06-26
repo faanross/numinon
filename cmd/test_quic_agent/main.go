@@ -11,33 +11,12 @@ import (
 
 func main() {
 	// --- Configuration ---
-	// The URL of the HTTP/3 server.
-	// The scheme MUST be https for HTTP/3.
+
 	const targetURL = "https://127.0.0.1:8888/"
 	log.Printf("Targeting HTTP/3 server at: %s", targetURL)
 
-	// --- Client Setup ---
-	// HTTP/3 requires a specific transport configuration using the quic-go library.
-	// In recent versions, this is done using http3.Transport, which implements
-	// the http.RoundTripper interface.
 	log.Println("Setting up HTTP/3 client...")
 
-	// Create a new http3.Transport.
-	//
-	// TLS Configuration: For local development with a self-signed certificate,
-	// we use `InsecureSkipVerify: true`.
-	//
-	// !!! SECURITY WARNING !!!
-	// In a production environment, you should NOT use InsecureSkipVerify.
-	// Instead, you should provide the RootCA for the server's certificate
-	// to ensure you are connecting to a trusted server.
-	// Example for production:
-	//   caCert, err := os.ReadFile("ca.crt")
-	//   if err != nil { log.Fatal(err) }
-	//   caCertPool := x509.NewCertPool()
-	//   caCertPool.AppendCertsFromPEM(caCert)
-	//   tlsConf := &tls.Config{ RootCAs: caCertPool }
-	//
 	transport := &http3.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true, // Allow self-signed certificates for local dev
