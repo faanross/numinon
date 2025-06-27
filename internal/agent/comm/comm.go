@@ -8,5 +8,4 @@ type Communicator interface {
 	CheckIn() ([]byte, error)
 	SendResult(resultData []byte) error
 	Type() config.AgentProtocol
-	IsConnected() bool
 }

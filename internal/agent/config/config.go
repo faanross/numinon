@@ -7,16 +7,18 @@ type AgentConfig struct {
 	ServerIP        string
 	ServerPort      string
 	CheckInEndpoint string
+	ResultsEndpoint string
 	Delay           time.Duration
 	Jitter          float64
 }
 
-func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string, delay time.Duration, jitter float64) *AgentConfig {
+func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string, results string, delay time.Duration, jitter float64) *AgentConfig {
 	return &AgentConfig{
 		Protocol:        protocol,
 		ServerIP:        ip,
 		ServerPort:      port,
 		CheckInEndpoint: endpoint,
+		ResultsEndpoint: results,
 		Delay:           delay,
 		Jitter:          jitter,
 	}
