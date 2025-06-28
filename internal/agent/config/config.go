@@ -10,9 +10,11 @@ type AgentConfig struct {
 	ResultsEndpoint string
 	Delay           time.Duration
 	Jitter          float64
+	UUID            string
 }
 
-func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string, results string, delay time.Duration, jitter float64) *AgentConfig {
+func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string,
+	results string, delay time.Duration, jitter float64, uuid string) *AgentConfig {
 	return &AgentConfig{
 		Protocol:        protocol,
 		ServerIP:        ip,
@@ -21,6 +23,7 @@ func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint str
 		ResultsEndpoint: results,
 		Delay:           delay,
 		Jitter:          jitter,
+		UUID:            uuid,
 	}
 }
 

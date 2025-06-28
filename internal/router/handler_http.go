@@ -12,6 +12,8 @@ import (
 
 // CheckinHandler processes requests from clients checking in for tasks.
 func CheckinHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("The /CHECKIN endpoint was hit: %s ", r.URL.Path)
+
 	var response models.ServerTaskResponse
 
 	// Randomly decide if a task is available (50/50 chance).
@@ -49,7 +51,7 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// This just needs to receive the result, for now, all we need to do is just print a test message
-	log.Printf("This /RESULTS endpoint was hit: %s ", r.URL.Path)
+	log.Printf("The /RESULTS endpoint was hit: %s ", r.URL.Path)
 	w.Write([]byte("The RESULTS endpoint was hit: " + r.URL.Path))
 }
 
