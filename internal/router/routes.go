@@ -5,6 +5,10 @@ import (
 )
 
 func SetupRoutes(r *chi.Mux) {
-	r.Get("/", RootHandler)
+	// HTTP-based endpoints
+	r.Get("/", CheckinHandler)
+	r.Post("/results", ResultsHandler)
+
+	// WS-based endpoint
 	r.Get("/ws", WSHandler)
 }
