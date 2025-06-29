@@ -12,7 +12,9 @@ import (
 
 // CheckinHandler processes requests from clients checking in for tasks.
 func CheckinHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("The /CHECKIN endpoint was hit: %s ", r.URL.Path)
+
+	agentID := r.Header.Get("Agent-ID") // Read the custom header
+	log.Printf("|✅ CHK_IN| Received check-in GET from Agent ID: %s via %s", agentID, r.RemoteAddr)
 
 	var response models.ServerTaskResponse
 
@@ -51,7 +53,9 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// This just needs to receive the result, for now, all we need to do is just print a test message
-	log.Printf("The /RESULTS endpoint was hit: %s ", r.URL.Path)
+	agentID := r.Header.Get("Agent-ID") // Read the custom header
+	log.Printf("|✅ CHK_IN| Received results POST from Agent ID: %s via %s", agentID, r.RemoteAddr)
+
 	w.Write([]byte("The RESULTS endpoint was hit: " + r.URL.Path))
 }
 

@@ -63,55 +63,6 @@ func (a *Agent) calculateSleepWithJitter() time.Duration {
 	return time.Duration(finalSleep)
 }
 
-// executeTask processes a received task, performs the action, and sends the result.
-func (a *Agent) executeTask(task models.ServerTaskResponse) {
-	log.Printf("|AGENT TASK|-> Executing Task ID: %s, Command: %s", task.TaskID, task.Command)
-
-	// instantiate emtpy AgentTaskResult struct to hold result
-	// also, assign the ID of the result = ID of task (as communicated by the server)
-	var result models.AgentTaskResult
-	result.TaskID = task.TaskID
-
-	// Placeholder Command Execution
-	// For now we'll just perform a very simple function right here
-	// But in future we'll only do a function call here
-	// Each action's actual logic (doing) will be in its own function
-	// This switch simple acts as a switchboard
-
-	switch task.Command {
-	case "ping":
-		log.Println("|AGENT TASK|-> Handling 'ping' command.")
-		result.Status = "success"
-		result.Output = []byte("pong")
-	case "echo":
-		log.Printf("|AGENT TASK|-> Handling 'echo' command with args: %v", task.Data)
-		result.Status = "success"
-		result.Output = []byte(fmt.Sprintf("Echoing args: %v", task.Data))
-	default:
-		log.Printf("|WARN AGENT TASK| Received unknown command: %s", task.Command)
-		result.Status = "error"
-		result.Error = fmt.Sprintf("Unknown command received: %s", task.Command)
-	}
-	// --- End Placeholder Logic ---
-
-	// Now marshall the result before sending it back using SendResult
-	resultBytes, err := json.Marshal(result)
-	if err != nil {
-		log.Printf("|❗ERR AGENT TASK| Failed to marshal result for Task ID %s: %v", task.TaskID, err)
-		return // Cannot send result if marshalling fails
-	}
-
-	// If we get here our AgentTaskResult struct has been marshalled as resultBytes
-	// Now pass it to SendResult()
-	log.Printf("|AGENT TASK|-> Sending result for Task ID %s (%d bytes)...", task.TaskID, len(resultBytes))
-	err = a.communicator.SendResult(resultBytes)
-	if err != nil {
-		log.Printf("|❗ERR AGENT TASK| Failed to send result for Task ID %s: %v", task.TaskID, err)
-	} else {
-		log.Printf("|AGENT TASK|-> Successfully sent result for Task ID %s.", task.TaskID)
-	}
-}
-
 // runHttpLoop handles the main check-in cycle for HTTP-based protocols using time.Sleep and jitter.
 func (a *Agent) runHttpLoop() error {
 	log.Println("|AGENT LOOP HTTP|-> HTTP loop started.")

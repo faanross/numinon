@@ -77,8 +77,9 @@ func (c *Http1ClearCommunicator) CheckIn() ([]byte, error) {
 		return nil, fmt.Errorf("failed to create %s check-in request: %w", c.agentConfig.Protocol, err)
 	}
 
-	// SET HEADERS (OPTIONAL)
+	// SET HEADERS
 	req.Header.Set("User-Agent", "NuminonAgent/0.1-Checkin")
+	req.Header.Set("Agent-ID", c.agentConfig.UUID)
 
 	// EXECUTE THE REQUEST
 	resp, err := c.httpClient.Do(req)
@@ -122,6 +123,7 @@ func (c *Http1ClearCommunicator) SendResult(resultData []byte) error {
 	// SET THE HEADERS
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "NuminonAgent/0.1-Result")
+	req.Header.Set("Agent-ID", c.agentConfig.UUID)
 
 	// EXECUTE THE REQUEST
 	resp, err := c.httpClient.Do(req)
