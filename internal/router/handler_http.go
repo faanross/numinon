@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -22,17 +23,22 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 	if seededRand.Intn(2) == 0 {
 		// No task is available.
 		response.TaskAvailable = false
+		log.Printf("No command issued to Agent")
 	} else {
 		// A task is available, so populate the details.
 		response.TaskAvailable = true
 		response.TaskID = generateTaskID()
 
 		// Randomly select a command.
-		commands := []string{"ping", "echo", "doesnotexist"}
+		commands := []string{"runcmd", "upload", "download", "enumerate",
+			"shellcode", "morph", "hop", "doesnotexist"}
 		response.Command = commands[seededRand.Intn(len(commands))]
 
 		// The 'Data' field is intentionally left empty as requested.
 		response.Data = nil
+
+		log.Printf("|📌 TASK ISSUED| -> Sent command '%s' with TaskID '%s' to Agent %s\n", response.Command, response.TaskID, agentID)
+
 	}
 
 	// Set the content type header to indicate a JSON response.
@@ -52,11 +58,52 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
-	// This just needs to receive the result, for now, all we need to do is just print a test message
-	agentID := r.Header.Get("Agent-ID") // Read the custom header
+
+	agentID := r.Header.Get("Agent-ID")
 	log.Printf("|✅ CHK_IN| Received results POST from Agent ID: %s via %s", agentID, r.RemoteAddr)
 
-	w.Write([]byte("The RESULTS endpoint was hit: " + r.URL.Path))
+	// Read the raw body from the request
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("|❗ERR RESULT|-> Error reading result body from agent %s: %v\n", agentID, err)
+		return
+	}
+	defer r.Body.Close()
+
+	// --- PRETTY PRINT LOGIC STARTS HERE ---
+
+	// 1. Unmarshal the raw JSON into our AgentTaskResult struct
+	var result models.AgentTaskResult
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Printf("|❗ERR RESULT|-> Error unmarshaling result JSON from agent %s: %v\n", agentID, err)
+		return
+	}
+
+	// Create a temporary struct for logging so we can display output as a string
+	prettyResult := struct {
+		TaskID string `json:"task_id"`
+		Status string `json:"status"`
+		Output string `json:"output"` // Changed to string for display
+		Error  string `json:"error"`
+	}{
+		TaskID: result.TaskID,
+		Status: result.Status,
+		Output: string(result.Output), // Convert byte slice to string here
+		Error:  result.Error,
+	}
+
+	// 2. Re-marshal the struct into a "pretty" indented JSON string
+	prettyJSON, err := json.MarshalIndent(prettyResult, "", "  ") // Using two spaces for indentation
+	if err != nil {
+		log.Printf("|❗ERR RESULT|-> Error re-marshaling for pretty printing: %v\n", err)
+	}
+	log.Printf("|✅ RESULT| Received results POST from Agent ID: %s via %s\n--- Task Result ---\n%s\n-------------------\n", agentID, r.RemoteAddr, string(prettyJSON))
+
+	// --- PRETTY PRINT LOGIC ENDS HERE ---
+
+	// Respond to the agent to confirm receipt
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Result received"))
 }
 
 // seededRand is a random number generator seeded at application start.
