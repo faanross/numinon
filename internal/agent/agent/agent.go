@@ -24,7 +24,8 @@ type Agent struct {
 func NewAgent(cfg config.AgentConfig) (*Agent, error) {
 	log.Println("|AGENT INIT|-> Creating new agent instance...")
 
-	communicator, err := comm.NewHttp1ClearCommunicator(cfg)
+	// communicator, err := comm.NewHttp1ClearCommunicator(cfg)
+	communicator, err := comm.NewCommunicator(cfg)
 	if err != nil {
 		return nil, err
 	}
