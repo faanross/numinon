@@ -56,19 +56,19 @@ func BasicValidateH2TLS(cfg config.AgentConfig) error {
 	return nil
 }
 
-func (c *Http1TLSCommunicator) Connect() error {
+func (c *Http2TLSCommunicator) Connect() error {
 	log.Printf("|COMM %s|-> Connect() called. Typically no-op for HTTP/1.1.", c.agentConfig.Protocol)
 	return nil
 }
 
-func (c *Http1TLSCommunicator) Disconnect() error {
+func (c *Http2TLSCommunicator) Disconnect() error {
 	log.Printf("|COMM %s|-> Disconnect() called.", c.agentConfig.Protocol)
 	return nil
 }
 
 // CheckIn performs a GET request to the CheckInEndpoint to fetch tasks.
 // Returns the raw response body which might contain tasking information.
-func (c *Http1TLSCommunicator) CheckIn() ([]byte, error) {
+func (c *Http2TLSCommunicator) CheckIn() ([]byte, error) {
 	// CONSTRUCT THE TARGET URL
 	targetURL := url.URL{
 		Scheme: "https",
@@ -109,21 +109,19 @@ func (c *Http1TLSCommunicator) CheckIn() ([]byte, error) {
 	}
 	// --- END VERIFY PROTOCOL ---
 
-	//log.Printf("|COMM H1TLS|-> Check-in response: Status=%s, Proto=%s", resp.Status, resp.Proto)
-
 	// READ RESPONSE (COULD CONTAIN INSTRUCTIONS)
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("|❗ERR COMM H1TLS| Failed to read check-in response body: %v", err)
+		log.Printf("|❗ERR COMM H2TLS| Failed to read check-in response body: %v", err)
 		return nil, fmt.Errorf("failed to read check-in response body: %w", err)
 	}
 
-	log.Printf("|COMM H1TLS|-> Successfully read %d bytes from check-in response", len(responseBody))
+	log.Printf("|COMM H2TLS|-> Successfully read %d bytes from check-in response", len(responseBody))
 	return responseBody, nil
 }
 
 // SendResult performs a POST request to the ResultsEndpoint to submit task results.
-func (c *Http1TLSCommunicator) SendResult(resultData []byte) error {
+func (c *Http2TLSCommunicator) SendResult(resultData []byte) error {
 	// CONSTRUCT THE TARGET URL
 	targetURL := url.URL{
 		Scheme: "https", // Hardcoded for H1C
@@ -131,12 +129,12 @@ func (c *Http1TLSCommunicator) SendResult(resultData []byte) error {
 		Path:   c.agentConfig.ResultsEndpoint,
 	}
 	fullURL := targetURL.String()
-	log.Printf("|COMM H1TLS|-> Sending %d bytes of results via POST to %s", len(resultData), fullURL)
+	log.Printf("|COMM H2TLS|-> Sending %d bytes of results via POST to %s", len(resultData), fullURL)
 
 	// CREATE THE HTTP POST REQUEST
 	req, err := http.NewRequest(http.MethodPost, fullURL, bytes.NewReader(resultData))
 	if err != nil {
-		log.Printf("|❗ERR COMM H1TLS| Failed to create results request: %v", err)
+		log.Printf("|❗ERR COMM H2TLS| Failed to create results request: %v", err)
 		return fmt.Errorf("failed to create http results request: %w", err)
 	}
 
@@ -153,12 +151,12 @@ func (c *Http1TLSCommunicator) SendResult(resultData []byte) error {
 	}
 	defer resp.Body.Close() // Close body even if we don't read it, to release resources
 
-	log.Printf("|COMM H1TLS|-> Results POST response: Status=%s, Proto=%s", resp.Status, resp.Proto)
+	log.Printf("|COMM H2TLS|-> Results POST response: Status=%s, Proto=%s", resp.Status, resp.Proto)
 
-	log.Printf("|COMM H1TLS|-> Successfully sent results.")
+	log.Printf("|COMM H2TLS|-> Successfully sent results.")
 	return nil
 }
 
-func (c *Http1TLSCommunicator) Type() config.AgentProtocol {
+func (c *Http2TLSCommunicator) Type() config.AgentProtocol {
 	return config.HTTP1Clear
 }
