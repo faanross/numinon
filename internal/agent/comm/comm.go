@@ -22,28 +22,24 @@ func NewCommunicator(cfg config.AgentConfig) (Communicator, error) {
 		return NewHttp1ClearCommunicator(cfg)
 
 	case config.HTTP1TLS:
-		return nil, errors.New("http1tls not yet supported")
-		//return NewHTTP1TLSListener(config)
+		return NewHttp1TLSCommunicator(cfg)
 
 	case config.HTTP2TLS:
-
-		return nil, errors.New("http2tls not yet supported")
-		//return NewHTTP2TLSListener(config)
+		return NewHttp2TLSCommunicator(cfg)
 
 	case config.HTTP3:
 		return nil, errors.New("http3 not yet supported")
-		//return NewHTTP3Listener(config)
+		//return NewHTTP3Communicator(cfg)
 
 	case config.WebsocketClear:
 		return nil, errors.New("websocket not yet supported")
-		//return NewWSListener(config)
+		//return NewWSCommunicator(cfg)
 
 	case config.WebsocketSecure:
 		return nil, errors.New("websocket tls not yet supported")
-		//return NewWSSListener(config)
+		//return NewWSSCommunicator(cfg)
 
 	default:
 		return nil, fmt.Errorf("unknown communicator type specified: %s", cfg.Protocol)
 	}
-
 }
