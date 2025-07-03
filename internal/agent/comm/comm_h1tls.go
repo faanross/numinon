@@ -151,5 +151,5 @@ func (c *Http1TLSCommunicator) SendResult(resultData []byte) error {
 }
 
 func (c *Http1TLSCommunicator) Type() config.AgentProtocol {
-	return config.HTTP1Clear
+	return config.HTTP2TLS
 }
