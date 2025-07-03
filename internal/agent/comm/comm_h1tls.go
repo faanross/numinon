@@ -50,7 +50,7 @@ func BasicValidateH1TLS(cfg config.AgentConfig) error {
 		return fmt.Errorf("mismatched config: NewHttp1ClearCommunicator called with protocol %s", cfg.Protocol)
 	}
 	if cfg.ServerIP == "" || cfg.ServerPort == "" || cfg.CheckInEndpoint == "" {
-		return fmt.Errorf("config requires ServerIP, ServerPort, and CheckInEndpoint for H1C")
+		return fmt.Errorf("config requires ServerIP, ServerPort, and CheckInEndpoint")
 	}
 	return nil
 }

