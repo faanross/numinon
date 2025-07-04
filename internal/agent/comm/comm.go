@@ -28,8 +28,7 @@ func NewCommunicator(cfg config.AgentConfig) (Communicator, error) {
 		return NewHttp2TLSCommunicator(cfg)
 
 	case config.HTTP3:
-		return nil, errors.New("http3 not yet supported")
-		//return NewHTTP3Communicator(cfg)
+		return NewHttp3Communicator(cfg)
 
 	case config.WebsocketClear:
 		return nil, errors.New("websocket not yet supported")

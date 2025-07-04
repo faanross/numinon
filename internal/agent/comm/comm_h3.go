@@ -44,7 +44,7 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 	// It is a long-lived object that manages connections.
 	transport := &http3.Transport{
 		TLSClientConfig: tlsConfig,
-		QUICConfig: &quic.Config{
+		QUICConfig:      &quic.Config{
 			// Optional: Add QUIC-specific config if needed.
 			// For example, to increase idle timeout:
 			// MaxIdleTimeout: 60 * time.Second,
@@ -80,11 +80,8 @@ func (c *Http3Communicator) Connect() error {
 }
 
 // Disconnect is for cleanup logic.
-func (c *Http3Communicator) Disconnect(transport *http3.Transport) error {
-	log.Printf("|COMM CLEANUP|-> Closing H3 transport.")
-	if transport != nil {
-		return transport.Close()
-	}
+func (c *Http3Communicator) Disconnect() error {
+	log.Println("|COMM H3|-> Disconnect() called (no-op for H3/QUIC)")
 	return nil
 }
 
@@ -142,7 +139,7 @@ func (c *Http3Communicator) CheckIn() ([]byte, error) {
 }
 
 // SendResult performs a POST request to the ResultsEndpoint to submit task results.
-func (c *Http2TLSCommunicator) SendResult(resultData []byte) error {
+func (c *Http3Communicator) SendResult(resultData []byte) error {
 	// CONSTRUCT THE TARGET URL
 	targetURL := url.URL{
 		Scheme: "https", // Hardcoded for H1C
@@ -150,12 +147,12 @@ func (c *Http2TLSCommunicator) SendResult(resultData []byte) error {
 		Path:   c.agentConfig.ResultsEndpoint,
 	}
 	fullURL := targetURL.String()
-	log.Printf("|COMM H2TLS|-> Sending %d bytes of results via POST to %s", len(resultData), fullURL)
+	log.Printf("|COMM H3|-> Sending %d bytes of results via POST to %s", len(resultData), fullURL)
 
 	// CREATE THE HTTP POST REQUEST
 	req, err := http.NewRequest(http.MethodPost, fullURL, bytes.NewReader(resultData))
 	if err != nil {
-		log.Printf("|❗ERR COMM H2TLS| Failed to create results request: %v", err)
+		log.Printf("|❗ERR COMM H3| Failed to create results request: %v", err)
 		return fmt.Errorf("failed to create http results request: %w", err)
 	}
 
@@ -167,14 +164,14 @@ func (c *Http2TLSCommunicator) SendResult(resultData []byte) error {
 	// EXECUTE THE REQUEST
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		log.Printf("|❗ERR COMM H1TLS| Results POST request failed: %v", err)
+		log.Printf("|❗ERR COMM H3| Results POST request failed: %v", err)
 		return fmt.Errorf("http results post request failed: %w", err)
 	}
 	defer resp.Body.Close() // Close body even if we don't read it, to release resources
 
-	log.Printf("|COMM H2TLS|-> Results POST response: Status=%s, Proto=%s", resp.Status, resp.Proto)
+	log.Printf("|COMM H3|-> Results POST response: Status=%s, Proto=%s", resp.Status, resp.Proto)
 
-	log.Printf("|COMM H2TLS|-> Successfully sent results.")
+	log.Printf("|COMM H3|-> Successfully sent results.")
 	return nil
 }
 

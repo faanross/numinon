@@ -3,27 +3,29 @@ package config
 import "time"
 
 type AgentConfig struct {
-	Protocol        AgentProtocol
-	ServerIP        string
-	ServerPort      string
-	CheckInEndpoint string
-	ResultsEndpoint string
-	Delay           time.Duration
-	Jitter          float64
-	UUID            string
+	Protocol          AgentProtocol
+	ServerIP          string
+	ServerPort        string
+	CheckInEndpoint   string
+	ResultsEndpoint   string
+	WebsocketEndpoint string
+	Delay             time.Duration
+	Jitter            float64
+	UUID              string
 }
 
 func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string,
-	results string, delay time.Duration, jitter float64, uuid string) *AgentConfig {
+	results string, wsendpoint string, delay time.Duration, jitter float64, uuid string) *AgentConfig {
 	return &AgentConfig{
-		Protocol:        protocol,
-		ServerIP:        ip,
-		ServerPort:      port,
-		CheckInEndpoint: endpoint,
-		ResultsEndpoint: results,
-		Delay:           delay,
-		Jitter:          jitter,
-		UUID:            uuid,
+		Protocol:          protocol,
+		ServerIP:          ip,
+		ServerPort:        port,
+		CheckInEndpoint:   endpoint,
+		ResultsEndpoint:   results,
+		WebsocketEndpoint: wsendpoint,
+		Delay:             delay,
+		Jitter:            jitter,
+		UUID:              uuid,
 	}
 }
 

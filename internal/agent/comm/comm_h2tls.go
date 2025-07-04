@@ -146,7 +146,7 @@ func (c *Http2TLSCommunicator) SendResult(resultData []byte) error {
 	// EXECUTE THE REQUEST
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		log.Printf("|❗ERR COMM H1TLS| Results POST request failed: %v", err)
+		log.Printf("|❗ERR COMM H2TLS| Results POST request failed: %v", err)
 		return fmt.Errorf("http results post request failed: %w", err)
 	}
 	defer resp.Body.Close() // Close body even if we don't read it, to release resources

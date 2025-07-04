@@ -18,14 +18,15 @@ func main() {
 	// STEP ONE IS CREATING OUR CONFIG
 	// For now, we just hardcode it here directly, later we'll come up with more elegant solution
 	agentConfig := config.AgentConfig{
-		Protocol:        config.HTTP2TLS,
-		ServerIP:        "127.0.0.1",
-		ServerPort:      "8888",
-		CheckInEndpoint: "/",
-		ResultsEndpoint: "/results",
-		Delay:           time.Second * 5,
-		Jitter:          0.50,
-		UUID:            uuid.New().String(),
+		Protocol:          config.HTTP3,
+		ServerIP:          "127.0.0.1",
+		ServerPort:        "8888",
+		CheckInEndpoint:   "/",
+		ResultsEndpoint:   "/results",
+		WebsocketEndpoint: "/ws",
+		Delay:             time.Second * 5,
+		Jitter:            0.50,
+		UUID:              uuid.New().String(),
 	}
 
 	prettyPrintConfig(&agentConfig)
