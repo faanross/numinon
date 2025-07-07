@@ -18,7 +18,7 @@ func main() {
 	// STEP ONE IS CREATING OUR CONFIG
 	// For now, we just hardcode it here directly, later we'll come up with more elegant solution
 	agentConfig := config.AgentConfig{
-		Protocol:          config.HTTP3,
+		Protocol:          config.WebsocketClear,
 		ServerIP:          "127.0.0.1",
 		ServerPort:        "8888",
 		CheckInEndpoint:   "/",

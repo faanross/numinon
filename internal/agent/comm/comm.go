@@ -31,8 +31,7 @@ func NewCommunicator(cfg config.AgentConfig) (Communicator, error) {
 		return NewHttp3Communicator(cfg)
 
 	case config.WebsocketClear:
-		return nil, errors.New("websocket not yet supported")
-		//return NewWSCommunicator(cfg)
+		return NewWsClearCommunicator(cfg)
 
 	case config.WebsocketSecure:
 		return nil, errors.New("websocket tls not yet supported")

@@ -68,10 +68,11 @@ func (a *Agent) Start() error {
 
 	switch a.communicator.Type() {
 	case config.HTTP1Clear, config.HTTP1TLS, config.HTTP2TLS, config.HTTP3:
-		log.Println("|AGENT START|-> Entering HTTP run loop.")
+		log.Println("|AGENT START|-> Entering HTTP-based run loop.")
 		return a.runHttpLoop()
 	case config.WebsocketClear, config.WebsocketSecure:
-		return fmt.Errorf("WS runloop not yet implemented")
+		log.Println("|AGENT START|-> Entering WebSocket-based run loop.")
+		return a.runWsLoop()
 	default:
 		log.Printf("|❗ERR AGENT START| Unknown or unsupported communicator type: %s", a.communicator.Type())
 		return fmt.Errorf("unknown communicator type: %s", a.communicator.Type())
