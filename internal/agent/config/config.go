@@ -12,6 +12,12 @@ type AgentConfig struct {
 	Delay             time.Duration
 	Jitter            float64
 	UUID              string
+
+	// New fields related to payload jitter
+	CheckinMethod   string
+	EnablePadding   bool
+	MinPaddingBytes int
+	MaxPaddingBytes int
 }
 
 func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string,

@@ -15,3 +15,8 @@ type AgentTaskResult struct {
 	Output []byte `json:"output,omitempty"`
 	Error  string `json:"error,omitempty"`
 }
+
+// AgentCheckIn is used to allow for payload jitter (padding) if enabled
+type AgentCheckIn struct {
+	Padding string
+}

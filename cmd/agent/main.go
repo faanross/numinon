@@ -27,6 +27,10 @@ func main() {
 		Delay:             time.Second * 5,
 		Jitter:            0.50,
 		UUID:              uuid.New().String(),
+		CheckinMethod:     "GET",
+		EnablePadding:     false,
+		MinPaddingBytes:   0,
+		MaxPaddingBytes:   1024,
 	}
 
 	prettyPrintConfig(&agentConfig)
