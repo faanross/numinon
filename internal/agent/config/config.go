@@ -18,21 +18,9 @@ type AgentConfig struct {
 	EnablePadding   bool
 	MinPaddingBytes int
 	MaxPaddingBytes int
-}
 
-func NewAgentConfig(protocol AgentProtocol, ip string, port string, endpoint string,
-	results string, wsendpoint string, delay time.Duration, jitter float64, uuid string) *AgentConfig {
-	return &AgentConfig{
-		Protocol:          protocol,
-		ServerIP:          ip,
-		ServerPort:        port,
-		CheckInEndpoint:   endpoint,
-		ResultsEndpoint:   results,
-		WebsocketEndpoint: wsendpoint,
-		Delay:             delay,
-		Jitter:            jitter,
-		UUID:              uuid,
-	}
+	// Connection Mode
+	BeaconMode bool
 }
 
 type AgentProtocol string

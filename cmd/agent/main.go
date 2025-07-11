@@ -18,7 +18,7 @@ func main() {
 	// STEP ONE IS CREATING OUR CONFIG
 	// For now, we just hardcode it here directly, later we'll come up with more elegant solution
 	agentConfig := config.AgentConfig{
-		Protocol:          config.WebsocketSecure,
+		Protocol:          config.HTTP1TLS,
 		ServerIP:          "127.0.0.1",
 		ServerPort:        "8888",
 		CheckInEndpoint:   "/",
@@ -27,10 +27,11 @@ func main() {
 		Delay:             time.Second * 5,
 		Jitter:            0.50,
 		UUID:              uuid.New().String(),
-		CheckinMethod:     "GET",
-		EnablePadding:     false,
-		MinPaddingBytes:   0,
+		CheckinMethod:     "POST",
+		EnablePadding:     true,
+		MinPaddingBytes:   100,
 		MaxPaddingBytes:   1024,
+		BeaconMode:        true,
 	}
 
 	prettyPrintConfig(&agentConfig)
