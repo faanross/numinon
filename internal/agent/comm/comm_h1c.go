@@ -85,9 +85,9 @@ func (c *Http1ClearCommunicator) CheckIn() ([]byte, error) {
 
 		if c.agentConfig.EnablePadding && c.agentConfig.MaxPaddingBytes > 0 {
 			checkinPayload := models.AgentCheckIn{
-				Padding: string(payloadPadding),
+				Padding: payloadPadding,
 			}
-			log.Printf("|COMM %s|-> Added padding to POST check-in.", c.Type())
+			log.Printf("|COMM %s|-> Added padding (SIZE: %d bytes) to POST check-in.", c.Type(), len(payloadPadding))
 
 			bodyBytes, marshalErr := json.Marshal(checkinPayload)
 			if marshalErr != nil {

