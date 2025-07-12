@@ -66,7 +66,13 @@ func (c *Http2TLSCommunicator) Connect() error {
 }
 
 func (c *Http2TLSCommunicator) Disconnect() error {
-	log.Printf("|COMM %s|-> Disconnect() called.", c.agentConfig.Protocol)
+	log.Printf("|🔌 COMM %s|-> Disconnect() called.", c.agentConfig.Protocol)
+
+	if transport, ok := c.httpClient.Transport.(*http.Transport); ok {
+		transport.CloseIdleConnections()
+		log.Println("Client disconnected from server.")
+	}
+
 	return nil
 }
 

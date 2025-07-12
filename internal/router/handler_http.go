@@ -15,7 +15,7 @@ import (
 func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
 	agentID := r.Header.Get("Agent-ID") // Read the custom header
-	log.Printf("|✅ CHK_IN| Received check-in GET from Agent ID: %s via %s", agentID, r.RemoteAddr)
+	log.Printf("|✅ CHK_IN| Received check-in %s from Agent ID: %s via %s", r.Method, agentID, r.RemoteAddr)
 
 	var response models.ServerTaskResponse
 

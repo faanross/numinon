@@ -48,7 +48,7 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 	// It is a long-lived object that manages connections.
 	transport := &http3.Transport{
 		TLSClientConfig: tlsConfig,
-		QUICConfig: &quic.Config{
+		QUICConfig:      &quic.Config{
 			// Optional: Add QUIC-specific config if needed.
 			// For example, to increase idle timeout:
 			// MaxIdleTimeout: 60 * time.Second,
@@ -85,8 +85,23 @@ func (c *Http3Communicator) Connect() error {
 
 // Disconnect is for cleanup logic.
 func (c *Http3Communicator) Disconnect() error {
-	log.Println("|COMM H3|-> Disconnect() called (no-op for H3/QUIC)")
-	return nil
+	log.Printf("|🔌 COMM %s|-> Disconnect() called.", c.Type())
+
+	// 1. Safely access the transport from the HTTP client.
+	// We type-assert it to io.Closer, which http3.Transport implements.
+	if transport, ok := c.httpClient.Transport.(io.Closer); ok {
+		// 2. The .Close() method on the http3.Transport will gracefully
+		// shut down all active QUIC sessions.
+		err := transport.Close()
+		if err != nil {
+			log.Printf("|❗ERR COMM H3|-> Failed to close transport: %v", err)
+			return err
+		}
+		log.Println("Client disconnected from server.")
+		return nil
+	}
+
+	return fmt.Errorf("transport does not implement io.Closer")
 }
 
 // CheckIn performs a GET request to the CheckInEndpoint to fetch tasks.

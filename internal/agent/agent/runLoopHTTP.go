@@ -48,18 +48,7 @@ func (a *Agent) runHttpLoop() error {
 			// Next, check if there is no task
 			if !taskResp.TaskAvailable {
 				log.Println("|AGENT LOOP HTTP|-> No task from server, going back to sleep.")
-				time.Sleep(sleepDuration)
-				// RIGHT BEFORE WE SLEEP WE DISCONNECT
-				if a.config.BeaconMode {
-					log.Println("|AGENT LOOP HTTP|-> Beacon Mode is ENABLED, calling Disconnect()")
-					err := a.communicator.Disconnect()
-					if err != nil {
-						fmt.Println("|AGENT LOOP HTTP|-> Beacon Mode failed to called Disconnect")
-					}
 
-				}
-				// ENDS HERE
-				continue
 			}
 
 			// Getting here implies there is a task, still not an issue to check explicitly (for readability)
@@ -80,7 +69,7 @@ func (a *Agent) runHttpLoop() error {
 
 			}
 			// ENDS HERE
-
+			
 			log.Printf("|AGENT LOOP HTTP|-> Sleeping for %v...", sleepDuration)
 			time.Sleep(sleepDuration)
 		}

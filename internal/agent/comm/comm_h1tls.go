@@ -20,6 +20,7 @@ var _ Communicator = (*Http1TLSCommunicator)(nil)
 type Http1TLSCommunicator struct {
 	agentConfig config.AgentConfig
 	httpClient  *http.Client
+	response    *http.Response
 }
 
 func NewHttp1TLSCommunicator(cfg config.AgentConfig) (*Http1TLSCommunicator, error) {
@@ -65,7 +66,18 @@ func (c *Http1TLSCommunicator) Connect() error {
 }
 
 func (c *Http1TLSCommunicator) Disconnect() error {
-	log.Printf("|COMM %s|-> Disconnect() called.", c.agentConfig.Protocol)
+	log.Printf("|🔌 COMM %s|-> Disconnect() called.", c.agentConfig.Protocol)
+	if c.response != nil {
+		// Closing the response body is the primary way to signal
+		// that the client is done with the connection.
+		io.Copy(io.Discard, c.response.Body) // Read and discard any remaining body
+		c.response.Body.Close()
+		fmt.Println("Client disconnected from server.")
+	}
+
+	// To be thorough, we can also close any idle connections
+	// that the client's transport might be keeping alive.
+	c.httpClient.Transport.(*http.Transport).CloseIdleConnections()
 	return nil
 }
 
@@ -132,6 +144,7 @@ func (c *Http1TLSCommunicator) CheckIn() ([]byte, error) {
 		log.Printf("|❗ERR COMM H1TLS| Check-in request failed: %v", err)
 		return nil, fmt.Errorf("http check-in request failed: %w", err)
 	}
+	c.response = resp
 	defer resp.Body.Close()
 
 	log.Printf("|COMM H1TLS|-> Check-in response: Status=%s, Proto=%s", resp.Status, resp.Proto)
