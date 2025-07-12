@@ -7,6 +7,8 @@ import (
 func SetupRoutes(r *chi.Mux) {
 	// HTTP-based endpoints
 	r.Get("/", CheckinHandler)
+	r.Post("/", CheckinHandler)
+
 	r.Post("/results", ResultsHandler)
 
 	// WS-based endpoint
