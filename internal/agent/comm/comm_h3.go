@@ -100,7 +100,7 @@ func (c *Http3Communicator) Disconnect() error {
 		log.Println("Client disconnected from server.")
 		return nil
 	}
-	// f
+
 	return fmt.Errorf("transport does not implement io.Closer")
 }
 
