@@ -48,7 +48,7 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 	// It is a long-lived object that manages connections.
 	transport := &http3.Transport{
 		TLSClientConfig: tlsConfig,
-		QUICConfig:      &quic.Config{
+		QUICConfig: &quic.Config{
 			// Optional: Add QUIC-specific config if needed.
 			// For example, to increase idle timeout:
 			// MaxIdleTimeout: 60 * time.Second,
@@ -100,7 +100,7 @@ func (c *Http3Communicator) Disconnect() error {
 		log.Println("Client disconnected from server.")
 		return nil
 	}
-
+	// f
 	return fmt.Errorf("transport does not implement io.Closer")
 }
 
