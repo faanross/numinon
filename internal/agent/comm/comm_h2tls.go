@@ -31,7 +31,7 @@ func NewHttp2TLSCommunicator(cfg config.AgentConfig) (*Http2TLSCommunicator, err
 	log.Printf("|COMM INIT|-> Initializing HTTP/2 TLS Communicator for %s:%s%s", cfg.ServerIP, cfg.ServerPort, cfg.CheckInEndpoint)
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: cfg.SkipVerifyTLS,
 	}
 
 	transport := &http.Transport{

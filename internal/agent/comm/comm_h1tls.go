@@ -32,7 +32,7 @@ func NewHttp1TLSCommunicator(cfg config.AgentConfig) (*Http1TLSCommunicator, err
 	log.Printf("|COMM INIT|-> Initializing HTTP/1.1 TLS Communicator for %s:%s%s", cfg.ServerIP, cfg.ServerPort, cfg.CheckInEndpoint)
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: cfg.SkipVerifyTLS,
 	}
 
 	transport := &http.Transport{

@@ -36,7 +36,7 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 	// --- Configure TLS for QUIC/HTTP3 ---
 	// QUIC requires TLS 1.3 and ALPN must include "h3".
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: cfg.SkipVerifyTLS,
 		NextProtos:         []string{"h3"},   // MUST include "h3" for HTTP/3
 		MinVersion:         tls.VersionTLS13, // QUIC requires TLS 1.3
 	}
@@ -48,7 +48,7 @@ func NewHttp3Communicator(cfg config.AgentConfig) (*Http3Communicator, error) {
 	// It is a long-lived object that manages connections.
 	transport := &http3.Transport{
 		TLSClientConfig: tlsConfig,
-		QUICConfig: &quic.Config{
+		QUICConfig:      &quic.Config{
 			// Optional: Add QUIC-specific config if needed.
 			// For example, to increase idle timeout:
 			// MaxIdleTimeout: 60 * time.Second,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"log"
 	"numinon_shadow/internal/agent/agent"
 	"numinon_shadow/internal/agent/config"
@@ -16,23 +15,7 @@ func main() {
 	log.Println("|AGENT MAIN|-> Starting Numinon Instigator...")
 
 	// STEP ONE IS CREATING OUR CONFIG
-	// For now, we just hardcode it here directly, later we'll come up with more elegant solution
-	agentConfig := config.AgentConfig{
-		Protocol:          config.HTTP3,
-		ServerIP:          "127.0.0.1",
-		ServerPort:        "8888",
-		CheckInEndpoint:   "/",
-		ResultsEndpoint:   "/results",
-		WebsocketEndpoint: "/ws",
-		Delay:             time.Second * 5,
-		Jitter:            0.50,
-		UUID:              uuid.New().String(),
-		CheckinMethod:     "POST",
-		EnablePadding:     true,
-		MinPaddingBytes:   100,
-		MaxPaddingBytes:   1024,
-		BeaconMode:        true,
-	}
+	agentConfig := getEmbeddedAgentConfig()
 
 	prettyPrintConfig(&agentConfig)
 

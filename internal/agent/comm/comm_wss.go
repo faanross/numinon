@@ -31,7 +31,7 @@ func NewWsSecureCommunicator(cfg config.AgentConfig) (*WsSecureCommunicator, err
 	}
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: cfg.SkipVerifyTLS,
 	}
 
 	// Configure the dialer (can set timeouts, etc.)

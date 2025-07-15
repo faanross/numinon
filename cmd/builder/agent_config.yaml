@@ -2,9 +2,9 @@
 # This file is loaded by the agent at startup.
 # If this file is not found or is invalid, the agent will use built-in default values from config.go
 
-protocol: "H1C" # Options: H1C, H1TLS, H2TLS, H3, WS, WSS
-server_ip: "192.168.2.138"
-server_port: "2222" # Ensure this matches the desired listener on the server
+protocol: "H1TLS" # Options: H1C, H1TLS, H2TLS, H3, WS, WSS
+server_ip: "127.0.0.1"
+server_port: "8888" # Ensure this matches the desired listener on the server
 
 check_in_endpoint: "/"
 results_endpoint: "/results"
@@ -13,7 +13,7 @@ websocket_endpoint: "/ws" # Used if protocol is WS or WSS
 delay: "10s" # Duration string, e.g., 5s, 1m, 100ms
 jitter: 0.20   # e.g., 0.20 for +/- 20%
 
-beacon_mode: "true" # true for beacon, false for persistent (HTTP-only)
+beacon_mode: true # true for beacon, false for persistent (HTTP-only)
 checkin_method: "POST"         # "GET" or "POST" (for HTTP types) - if padding is enabled HAS TO BE POST
 
 enable_padding: true # if true, checkin_method has to be POST
@@ -22,3 +22,4 @@ max_padding_bytes: 1024
 
 uuid: "agent_deadbeef01" # this will be replaced with generated UUID later, ignore actual value here
 
+skip_verify_tls: true # true means ALLOW self-signed certs

@@ -3,24 +3,34 @@ package config
 import "time"
 
 type AgentConfig struct {
-	Protocol          AgentProtocol
-	ServerIP          string
-	ServerPort        string
-	CheckInEndpoint   string
-	ResultsEndpoint   string
-	WebsocketEndpoint string
-	Delay             time.Duration
-	Jitter            float64
-	UUID              string
+	// core info
+	Protocol   AgentProtocol `yaml:"protocol"`
+	ServerIP   string        `yaml:"server_ip"`
+	ServerPort string        `yaml:"server_port"`
+
+	// endpoints
+	CheckInEndpoint   string `yaml:"check_in_endpoint"`
+	ResultsEndpoint   string `yaml:"results_endpoint"`
+	WebsocketEndpoint string `yaml:"websocket_endpoint"`
+
+	// agent properties
+	Delay  time.Duration `yaml:"delay"`
+	Jitter float64       `yaml:"jitter"`
 
 	// New fields related to payload jitter
-	CheckinMethod   string
-	EnablePadding   bool
-	MinPaddingBytes int
-	MaxPaddingBytes int
+	CheckinMethod   string `yaml:"checkin_method"`
+	EnablePadding   bool   `yaml:"enable_padding"`
+	MinPaddingBytes int    `yaml:"min_padding_bytes"`
+	MaxPaddingBytes int    `yaml:"max_padding_bytes"`
 
 	// Connection Mode
-	BeaconMode bool
+	BeaconMode bool `yaml:"beacon_mode"`
+
+	// Agent ID
+	UUID string `yaml:"uuid"`
+
+	//Self-signed TLS allowance
+	SkipVerifyTLS bool `yaml:"skip_verify_tls"`
 }
 
 type AgentProtocol string
