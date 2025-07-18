@@ -77,10 +77,10 @@ type HopArgs struct {
 	NewServerPort        string               `json:"new_server_port"`
 	NewCheckInEndpoint   *string              `json:"new_check_in_endpoint,omitempty"`
 	NewResultsEndpoint   *string              `json:"new_results_endpoint,omitempty"`
-	NewWebSocketEndpoint *string              `json:"new_websocket_path,omitempty"`
-	NewDelay             *string              `json:"new_base_sleep,omitempty"`
+	NewWebSocketEndpoint *string              `json:"new_websocket_endpoint,omitempty"`
+	NewDelay             *string              `json:"new_delay,omitempty"`
 	NewJitter            *float64             `json:"new_jitter,omitempty"`
-	NewBeaconMode        *bool                `json:"new_connection_mode,omitempty"`
+	NewBeaconMode        *bool                `json:"new_beacon_mode,omitempty"`
 	NewCheckinMethod     *string              `json:"new_checkin_method,omitempty"`
 	NewEnablePadding     *bool                `json:"new_enable_padding,omitempty"`
 	NewMinPaddingBytes   *int                 `json:"new_min_padding_bytes,omitempty"`

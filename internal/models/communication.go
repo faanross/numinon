@@ -10,10 +10,11 @@ type ServerTaskResponse struct {
 
 // AgentTaskResult represents the structure sent back to the /results endpoint.
 type AgentTaskResult struct {
-	TaskID string `json:"task_id"`
-	Status string `json:"status"`
-	Output []byte `json:"output,omitempty"`
-	Error  string `json:"error,omitempty"`
+	TaskID     string `json:"task_id"`
+	Status     string `json:"status"`
+	Output     []byte `json:"output,omitempty"`
+	Error      string `json:"error,omitempty"`
+	FileSha256 string `json:"file_sha256,omitempty"`
 }
 
 // AgentCheckIn is used to allow for payload jitter (padding) if enabled
