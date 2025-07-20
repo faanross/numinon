@@ -10,21 +10,24 @@ import (
 	"strings"
 )
 
-// handleDownload is the placeholder for the "download_file" command.
-// It unmarshals DownloadFileArgs from task.Data.
-func (a *Agent) handleDownload(task models.ServerTaskResponse) models.AgentTaskResult {
-	var args models.DownloadFileArgs
+// orchestrateDownload is the orchestrator for the "download" command.
+func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.AgentTaskResult {
+
+	// Create an instance of the command-specific args struct
+	var args models.DownloadArgs
+
+	// ServerTaskResponse.data contains the command-specific args, so now we unmarshall the field into the struct
 	if err := json.Unmarshal(task.Data, &args); err != nil {
 		errMsg := fmt.Sprintf("Failed to unmarshal DownloadFileArgs for Task ID %s: %v. Raw Data: %s", task.TaskID, err, string(task.Data))
 		log.Printf("|❗ERR DOWNLOAD_FILE HANDLER| %s", errMsg)
 		return models.AgentTaskResult{
 			TaskID: task.TaskID,
-			Status: "FAILED",
+			Status: "FAILED TO UNMARSHALL DATA FIELD", // We can later create a shared common error type system
 			Error:  errMsg,
 		}
 	}
 
-	log.Printf("|AGENT TASK DOWNLOAD_FILE HANDLER| Task ID: %s. Orchestrating download from agent path: '%s'",
+	log.Printf("|AGENT DOWNLOAD ORCHESTRATOR| Task ID: %s. Orchestrating download from agent path: '%s'",
 		task.TaskID, args.SourceFilePath)
 
 	// Call the "doer" function

