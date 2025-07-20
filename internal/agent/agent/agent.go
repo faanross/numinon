@@ -11,10 +11,9 @@ import (
 	"time"
 )
 
-// CommandHandlerFunc defines the signature for functions that handle specific C2 commands.
-// It takes the raw task response from the server and a pointer to the agent instance.
-// It's responsible for parsing its specific arguments from task.Data and returning a AgentTaskResult.
-type CommandHandlerFunc func(agent *Agent, task models.ServerTaskResponse) models.AgentTaskResult
+// OrchestratorFunc defines the signature for functions that orchestrates specific C2 commands.
+// This is used to create our commandOrchestrators map, where we can register individual commands
+type OrchestratorFunc func(agent *Agent, task models.ServerTaskResponse) models.AgentTaskResult
 
 // Agent represents an agent instance
 type Agent struct {
@@ -23,17 +22,17 @@ type Agent struct {
 	stopChan     chan struct{}
 	rng          *rand.Rand
 
-	commandHandlers map[string]CommandHandlerFunc // Maps commands to their keywords
+	commandOrchestrators map[string]OrchestratorFunc // Maps commands to their keywords
 }
 
 func registerCommands(agent *Agent) *Agent {
-	agent.commandHandlers["upload_file"] = (*Agent).handleUploadFileTask
-	agent.commandHandlers["download_file"] = (*Agent).handleDownloadFileTask
-	agent.commandHandlers["run_cmd"] = (*Agent).handleRunCommandTask
-	agent.commandHandlers["execute_shellcode"] = (*Agent).handleExecuteShellcodeTask
-	agent.commandHandlers["enumerate_processes"] = (*Agent).handleEnumerateProcessesTask
-	agent.commandHandlers["morph"] = (*Agent).handleMorphTask
-	agent.commandHandlers["hop"] = (*Agent).handleHopTask
+	agent.commandHandlers["upload"] = (*Agent).orchestrateUpload
+	agent.commandHandlers["download"] = (*Agent).orchestrateDownload
+	agent.commandHandlers["run_cmd"] = (*Agent).orchestrateRunCmd
+	agent.commandHandlers["shellcode"] = (*Agent).orchestrateShellcode
+	agent.commandHandlers["enum_proc"] = (*Agent).orchestrateEnumProc
+	agent.commandHandlers["morph"] = (*Agent).orchestrateMorph
+	agent.commandHandlers["hop"] = (*Agent).orchestrateHop
 
 	return agent
 }

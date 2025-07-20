@@ -2,9 +2,9 @@ package models
 
 import "numinon_shadow/internal/agent/config"
 
-// UploadFileArgs defines arguments for the "upload_file" command.
+// UploadArgs defines arguments for the "upload_file" command.
 // Server marshals this to JSON and puts it in ServerTaskResponse.Data.
-type UploadFileArgs struct {
+type UploadArgs struct {
 	TargetDirectory   string `json:"target_dir"`          // Absolute directory path on the agent's system
 	TargetFilename    string `json:"target_filename"`     // Desired filename on the agent's system
 	FileContentBase64 string `json:"file_content_base64"` // Base64 encoded content of the file
@@ -12,9 +12,9 @@ type UploadFileArgs struct {
 	OverwriteIfExists bool   `json:"overwrite_if_exists"` // Flag to allow overwriting if file exists
 }
 
-// DownloadFileArgs defines arguments for the "download_file" command.
+// DownloadArgs defines arguments for the "download_file" command.
 // Server marshals this to JSON and puts it in ServerTaskResponse.Data.
-type DownloadFileArgs struct {
+type DownloadArgs struct {
 	SourceFilePath string `json:"source_file_path"` // Absolute path of the file to download from the agent's system
 }
 

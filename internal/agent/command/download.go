@@ -5,7 +5,7 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func HandleDownload(task models.ServerTaskResponse) models.AgentTaskResult {
+func ExecuteDownload(task models.ServerTaskResponse) models.AgentTaskResult {
 	fmt.Printf("The following command has been executed: %s\n", task.Command)
 	return models.AgentTaskResult{
 		TaskID: task.TaskID,
