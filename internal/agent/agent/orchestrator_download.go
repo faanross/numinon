@@ -31,7 +31,7 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 		task.TaskID, args.SourceFilePath)
 
 	// Call the "doer" function
-	downloadResult := command.ExecuteDownload(args)
+	downloadResult := command.DoDownload(args, task.TaskID)
 
 	//
 
