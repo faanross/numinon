@@ -17,16 +17,16 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 
 	// ServerTaskResponse.data contains the command-specific args, so now we unmarshall the field into the struct
 	if err := json.Unmarshal(task.Data, &args); err != nil {
-		errMsg := fmt.Sprintf("Failed to unmarshal DownloadFileArgs for Task ID %s: %v. Raw Data: %s", task.TaskID, err, string(task.Data))
-		log.Printf("|❗ERR DOWNLOAD_FILE HANDLER| %s", errMsg)
+		errMsg := fmt.Sprintf("Failed to unmarshal DownloadArgs for Task ID %s: %v. Raw Data: %s", task.TaskID, err, string(task.Data))
+		log.Printf("|❗ERR DOWNLOAD HANDLER| %s", errMsg)
 		return models.AgentTaskResult{
 			TaskID: task.TaskID,
-			Status: models.StatusFailureUnmarshallError, // We can later create a shared common error type system
+			Status: models.StatusFailureUnmarshallError,
 			Error:  errMsg,
 		}
 	}
 
-	log.Printf("|AGENT DOWNLOAD ORCHESTRATOR| Task ID: %s. Orchestrating download from agent path: '%s'",
+	log.Printf("|✅ DOWNLOAD ORCHESTRATOR| Task ID: %s. Orchestrating download from agent path: '%s'",
 		task.TaskID, args.SourceFilePath)
 
 	// Call the "doer" function

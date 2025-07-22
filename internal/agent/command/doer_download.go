@@ -6,9 +6,7 @@ import (
 )
 
 func DoDownload(args models.DownloadArgs) (models.AgentTaskResult, error) {
-	fmt.Println("The DOWNLOAD command has been executed.")
-
-	fmt.Printf("The download path called by the command is: %s\n", args.SourceFilePath)
+	fmt.Println("|✅ DOWNLOAD DOER| The DOWNLOAD command has been executed.")
 
 	output := fmt.Sprintln("Let's just assume for now it succeeded, will implement later.")
 
