@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// orchestrateDownload is the orchestrator for the "download" command.
+// orchestrateDownload is the orchestrator for the download command.
 func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.AgentTaskResult {
 
 	// Create an instance of the command-specific args struct
@@ -18,7 +18,7 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 	// ServerTaskResponse.data contains the command-specific args, so now we unmarshall the field into the struct
 	if err := json.Unmarshal(task.Data, &args); err != nil {
 		errMsg := fmt.Sprintf("Failed to unmarshal DownloadArgs for Task ID %s: %v. Raw Data: %s", task.TaskID, err, string(task.Data))
-		log.Printf("|❗ERR DOWNLOAD HANDLER| %s", errMsg)
+		log.Printf("|❗ERR DOWNLOAD ORCHESTATOR| %s", errMsg)
 		return models.AgentTaskResult{
 			TaskID: task.TaskID,
 			Status: models.StatusFailureUnmarshallError,
@@ -43,9 +43,10 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 	if err != nil {
 		finalResult.Error = err.Error()
 
-		log.Printf("|❗ERR DOWNLOAD_FILE HANDLER| Download execution failed for Task ID %s: %s.",
+		log.Printf("|❗ERR DOWNLOAD ORCHESTATOR| Download execution failed for Task ID %s: %s.",
 			task.TaskID, finalResult.Error)
 
+		// NOTE THIS NEEDS TO BE FIXED AND ADAPTED ONCE ACTUAL COMMAND HAS BEEN IMPLEMENTED IN DOER
 		errorString := finalResult.Error
 		switch {
 		case strings.Contains(errorString, "validation:"):
@@ -58,6 +59,8 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 			finalResult.Status = models.StatusFailureReadError
 		}
 	} else {
+		// If we get here it means our doer call succeeded
+
 		// Success from download.Execute()
 		// Base64 encode the raw file bytes for transport
 		// encodedContent := base64.StdEncoding.EncodeToString(downloadResult.RawFileBytes)

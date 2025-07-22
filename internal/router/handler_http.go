@@ -30,7 +30,7 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 		response.TaskID = generateTaskID()
 
 		// Randomly select a command.
-		commands := []string{"download", "doesnotexist"}
+		commands := []string{"enumerate", "doesnotexist"}
 		// commands := []string{"runcmd", "upload", "download", "enumerate", "shellcode", "morph", "hop", "doesnotexist"}
 		response.Command = commands[seededRand.Intn(len(commands))]
 
