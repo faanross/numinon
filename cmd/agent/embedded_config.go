@@ -13,13 +13,13 @@ var embeddedAgentConfig = config.AgentConfig{
 	CheckInEndpoint:   "/",
 	ResultsEndpoint:   "/results",
 	WebsocketEndpoint: "/ws",
-	Delay:             time.Duration(10000000000),
+	Delay:             time.Duration(1000000000),
 	Jitter:            0.2,
 	CheckinMethod:     "POST",
 	EnablePadding:     true,
 	MinPaddingBytes:   64,
 	MaxPaddingBytes:   1024,
-	BeaconMode:        true,
+	BeaconMode:        false,
 	UUID:              "d061e77c-d404-48f8-bb73-ef1f899833f5", // This will be the generated UUID pkg
 	SkipVerifyTLS:     true,
 }
