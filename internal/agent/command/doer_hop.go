@@ -5,11 +5,17 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func HandleHop(task models.ServerTaskResponse) models.AgentTaskResult {
-	fmt.Printf("The following command has been executed: %s\n", task.Command)
-	return models.AgentTaskResult{
-		TaskID: task.TaskID,
+func DoHop(args models.HopArgs) (models.AgentTaskResult, error) {
+	fmt.Println("|✅ HOP DOER| The HOP command has been executed.")
+
+	output := fmt.Sprintln("Let's just assume for now it succeeded, will implement later.")
+
+	fmt.Println(output)
+
+	result := models.AgentTaskResult{
 		Status: "success",
-		Output: []byte(fmt.Sprintln("Called the Hop command")),
+		Output: []byte(output),
 	}
+
+	return result, nil
 }

@@ -63,7 +63,7 @@ func (a *Agent) orchestrateEnumerate(task models.ServerTaskResponse) models.Agen
 		finalResult.Output = enumerateResult.Output
 
 		finalResult.Status = models.StatusSuccess
-		log.Printf("|AGENT TASK DOWNLOAD_FILE HANDLER| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
+		log.Printf("|✅ ENUMERATE ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
 			task.TaskID, len(finalResult.Output))
 	}
 	return finalResult

@@ -67,7 +67,7 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 		// finalResult.Output = []byte(encodedContent)
 
 		finalResult.Status = models.StatusSuccess
-		log.Printf("|AGENT TASK DOWNLOAD_FILE HANDLER| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
+		log.Printf("|✅ DOWNLOAD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
 			task.TaskID, len(finalResult.Output))
 	}
 	return finalResult
