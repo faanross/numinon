@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/runcmd"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateRunCmd(task models.ServerTaskResponse) models.AgentTa
 		task.TaskID, args.CommandLine)
 
 	// Call the "doer" function
-	runCmdResult, err := command.DoRunCmd(args)
+	runCmdResult, err := runcmd.DoRunCmd(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

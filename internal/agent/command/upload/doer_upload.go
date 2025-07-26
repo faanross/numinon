@@ -1,12 +1,12 @@
-package command
+package upload
 
 import (
 	"fmt"
 	"numinon_shadow/internal/models"
 )
 
-func DoMorph(args models.MorphArgs) (models.AgentTaskResult, error) {
-	fmt.Println("|✅ MORPH DOER| The MORPH command has been executed.")
+func DoUpload(args models.UploadArgs) (models.AgentTaskResult, error) {
+	fmt.Println("|✅ UPLOAD DOER| The UPLOAD command has been executed.")
 
 	output := fmt.Sprintln("Let's just assume for now it succeeded, will implement later.")
 

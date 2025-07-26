@@ -1,4 +1,4 @@
-package command
+package download
 
 import (
 	"fmt"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/hop"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateHop(task models.ServerTaskResponse) models.AgentTaskR
 		task.TaskID, args.NewServerIP, args.NewServerPort)
 
 	// Call the "doer" function
-	hopResult, err := command.DoHop(args)
+	hopResult, err := hop.DoHop(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

@@ -1,12 +1,12 @@
-package command
+package runcmd
 
 import (
 	"fmt"
 	"numinon_shadow/internal/models"
 )
 
-func DoShellcode(args models.ShellcodeArgs) (models.AgentTaskResult, error) {
-	fmt.Println("|✅ SHELLCODE DOER| The SHELLCODE command has been executed.")
+func DoRunCmd(args models.RunCmdArgs) (models.AgentTaskResult, error) {
+	fmt.Println("|✅ RUN_CMD DOER| The RUN_CMD command has been executed.")
 
 	output := fmt.Sprintln("Let's just assume for now it succeeded, will implement later.")
 

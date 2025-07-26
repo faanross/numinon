@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/download"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 		task.TaskID, args.SourceFilePath)
 
 	// Call the "doer" function
-	downloadResult, err := command.DoDownload(args)
+	downloadResult, err := download.DoDownload(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

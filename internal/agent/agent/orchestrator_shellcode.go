@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/shellcode"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateShellcode(task models.ServerTaskResponse) models.Agen
 		task.TaskID, args.TargetPID, args.ExportName)
 
 	// Call the "doer" function
-	shellcodeResult, err := command.DoShellcode(args)
+	shellcodeResult, err := shellcode.DoShellcode(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

