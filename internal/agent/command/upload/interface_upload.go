@@ -1,8 +1,7 @@
-package enumerate
+package upload
 
 import "numinon_shadow/internal/models"
 
-type CommandEnumerate interface {
-	DoEnumerate(args models.EnumerateArgs) (models.AgentTaskResult, error)
+type CommandUpload interface {
+	DoUpload(args models.UploadArgs) (models.AgentTaskResult, error)
 }
-
