@@ -1,5 +1,4 @@
 //go:build windows
-// +build windows
 
 package shellcode
 
@@ -8,7 +7,15 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func DoShellcode(args models.ShellcodeArgs) (models.AgentTaskResult, error) {
+// windowsShellcode implements the CommandShellcode interface for Windows.
+type windowsShellcode struct{}
+
+// New is the constructor for our Windows-specific Shellcode command
+func New() CommandShellcode {
+	return &windowsShellcode{}
+}
+
+func (ws *windowsShellcode) DoShellcode(args models.ShellcodeArgs) (models.AgentTaskResult, error) {
 	fmt.Println("|✅ SHELLCODE DOER| The SHELLCODE command has been executed.")
 
 	output := fmt.Sprintln("Let's just assume for now it succeeded, will implement later.")
