@@ -7,7 +7,15 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func DoEnumerate(args models.EnumerateArgs) (models.AgentTaskResult, error) {
+// macEnumerate implements the CommandEnumerate interface for Darwin.
+type macEnumerate struct{}
+
+// New is the constructor for our Darwin-specific Enumerate command
+func New() CommandEnumerate {
+	return &macEnumerate{}
+}
+
+func (me *macEnumerate) DoEnumerate(args models.EnumerateArgs) (models.AgentTaskResult, error) {
 	fmt.Println("|❗ ENUMERATE DOER DARWIN| This feature has not yet been implemented for Darwin OS.")
 
 	result := models.AgentTaskResult{

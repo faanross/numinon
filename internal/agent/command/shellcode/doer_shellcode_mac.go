@@ -7,7 +7,15 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func DoShellcode(args models.ShellcodeArgs) (models.AgentTaskResult, error) {
+// macShellcode implements the CommandShellcode interface for Darwin.
+type macShellcode struct{}
+
+// New is the constructor for our Darwin-specific Shellcode command
+func New() CommandShellcode {
+	return &macShellcode{}
+}
+
+func (mc *macShellcode) DoShellcode(args models.ShellcodeArgs) (models.AgentTaskResult, error) {
 	fmt.Println("|❗ SHELLCODE DOER DARWIN| This feature has not yet been implemented for Darwin OS.")
 
 	result := models.AgentTaskResult{

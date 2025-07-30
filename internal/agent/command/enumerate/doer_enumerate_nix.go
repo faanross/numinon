@@ -7,7 +7,15 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func DoEnumerate(args models.EnumerateArgs) (models.AgentTaskResult, error) {
+// nixEnumerate implements the CommandEnumerate interface for Linux.
+type nixEnumerate struct{}
+
+// New is the constructor for our Linux-specific Enumerate command
+func New() CommandEnumerate {
+	return &nixEnumerate{}
+}
+
+func (ne *nixEnumerate) DoEnumerate(args models.EnumerateArgs) (models.AgentTaskResult, error) {
 	fmt.Println("|❗ ENUMERATE DOER LINUX| This feature has not yet been implemented for Linux OS.")
 
 	result := models.AgentTaskResult{

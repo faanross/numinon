@@ -7,7 +7,15 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func DoRunCmd(args models.RunCmdArgs) (models.AgentTaskResult, error) {
+// nixRunCmd implements the CommandRunCmd interface for Linux.
+type nixRunCmd struct{}
+
+// New is the constructor for our Linux-specific RunCmd command
+func New() CommandRunCmd {
+	return &nixRunCmd{}
+}
+
+func (nd *nixRunCmd) DoRunCmd(args models.RunCmdArgs) (models.AgentTaskResult, error) {
 	fmt.Println("|❗ RUNCMD DOER LINUX| This feature has not yet been implemented for Linux OS.")
 
 	result := models.AgentTaskResult{

@@ -7,7 +7,15 @@ import (
 	"numinon_shadow/internal/models"
 )
 
-func DoRunCmd(args models.RunCmdArgs) (models.AgentTaskResult, error) {
+// macRunCmd implements the CommandRunCmd interface for Darwin.
+type macRunCmd struct{}
+
+// New is the constructor for our Darwin-specific RunCmd command
+func New() CommandRunCmd {
+	return &macRunCmd{}
+}
+
+func (mr *macRunCmd) DoRunCmd(args models.RunCmdArgs) (models.AgentTaskResult, error) {
 	fmt.Println("|❗ RUNCMD DOER DARWIN| This feature has not yet been implemented for Darwin OS.")
 
 	result := models.AgentTaskResult{
