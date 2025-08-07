@@ -87,3 +87,12 @@ type ProcessInfo struct {
 	// SessionID   uint32 `json:"session_id,omitempty"` // Terminal Services session ID (Windows)
 	// CommandLine string `json:"command_line,omitempty"`// Full command line
 }
+
+// UploadResult holds the specific outcomes of the upload operation.
+// This is internal to the command logic before being mapped to models.TaskResult.
+type UploadResult struct {
+	FilePath     string // The path where the file was written
+	BytesWritten int64
+	ActualSha256 string
+	Message      string
+}
