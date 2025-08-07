@@ -30,7 +30,9 @@ func (a *Agent) orchestrateUpload(task models.ServerTaskResponse) models.AgentTa
 		task.TaskID, args.TargetFilename, args.TargetDirectory)
 
 	// Call the "doer" function
-	uploadResult, err := upload.DoUpload(args)
+	// Call the "doer" function
+	commandUpload := upload.New()                     // create os-specific Download struct ("decided" when compiled)
+	uploadResult, err := commandUpload.DoUpload(args) // Call the interface method
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

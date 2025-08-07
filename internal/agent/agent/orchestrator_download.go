@@ -30,7 +30,8 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 		task.TaskID, args.SourceFilePath)
 
 	// Call the "doer" function
-	downloadResult, err := download.DoDownload(args)
+	commandDownload := download.New()                       // create os-specific Download struct ("decided" when compiled)
+	downloadResult, err := commandDownload.DoDownload(args) // Call the interface method
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{

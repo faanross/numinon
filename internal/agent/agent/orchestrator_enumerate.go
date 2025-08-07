@@ -30,7 +30,8 @@ func (a *Agent) orchestrateEnumerate(task models.ServerTaskResponse) models.Agen
 		task.TaskID, args.ProcessName)
 
 	// Call the "doer" function
-	enumerateResult, err := enumerate.DoEnumerate(args)
+	commandEnumerate := enumerate.New()                        // create os-specific Download struct ("decided" when compiled)
+	enumerateResult, err := commandEnumerate.DoEnumerate(args) // Call the interface method
 
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{
