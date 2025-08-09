@@ -12,7 +12,7 @@ import (
 )
 
 // DoUpload executes the file upload logic.
-func DoUpload(args models.UploadArgs) models.UploadResult {
+func DoUpload(args models.UploadArgs) (models.UploadResult, error) {
 
 	// Display command arguments to terminal (TODO convert to slog)
 	fmt.Println("|✅ UPLOAD DOER| The UPLOAD command has been executed.")
@@ -21,22 +21,22 @@ func DoUpload(args models.UploadArgs) models.UploadResult {
 
 	// Validate essential arguments
 	if args.TargetDirectory == "" {
-		return models.UploadResult{Message: "TargetDirectory cannot be empty."}
+		return models.UploadResult{}, fmt.Errorf("TargetDirectory cannot be empty")
 	}
 	if args.TargetFilename == "" {
-		return models.UploadResult{Message: "TargetFilename cannot be empty."}
+		return models.UploadResult{}, fmt.Errorf("TargetFilename cannot be empty")
 	}
 	if args.FileContentBase64 == "" {
-		return models.UploadResult{Message: "FileContentBase64 cannot be empty."}
+		return models.UploadResult{}, fmt.Errorf("FileContentBase64 cannot be empty")
 	}
 	if args.ExpectedSha256 == "" {
-		return models.UploadResult{Message: "ExpectedSha256 cannot be empty."}
+		return models.UploadResult{}, fmt.Errorf("ExpectedSha256 cannot be empty")
 	}
 
 	// Decode File Content
 	rawFileBytes, err := base64.StdEncoding.DecodeString(args.FileContentBase64)
 	if err != nil {
-		return models.UploadResult{Message: "Failed to base64 decode file content."}
+		return models.UploadResult{}, fmt.Errorf("Failed to base64 decode file content.")
 	}
 	log.Printf("|⚙️ UPLOAD ACTION| Decoded file content: %d bytes.", len(rawFileBytes))
 
@@ -62,7 +62,8 @@ func DoUpload(args models.UploadArgs) models.UploadResult {
 	if _, statErr := os.Stat(dir); os.IsNotExist(statErr) {
 		log.Printf("|⚙️ UPLOAD ACTION| Target directory '%s' does not exist. Attempting to create.", dir)
 		if mkdirErr := os.MkdirAll(dir, 0755); mkdirErr != nil { // 0755: rwxr-xr-x
-			return models.UploadResult{Message: fmt.Sprintf("Failed to create target directory '%s'.", dir)}
+			return models.UploadResult{},
+				fmt.Errorf("Failed to create target directory '%s'.", dir)
 		}
 		log.Printf("|⚙️ UPLOAD ACTION| Successfully created target directory '%s'.", dir)
 	}
@@ -73,7 +74,7 @@ func DoUpload(args models.UploadArgs) models.UploadResult {
 	if fileExists && !args.OverwriteIfExists {
 		msg := fmt.Sprintf("File '%s' already exists and overwrite is not permitted.", destinationPath)
 		log.Printf("|⚙️ UPLOAD ACTION| %s", msg)
-		return models.UploadResult{FilePath: destinationPath, Message: msg}
+		return models.UploadResult{}, fmt.Errorf("file '%s' already exists and overwrite is not permitted", destinationPath)
 	}
 	if fileExists && args.OverwriteIfExists {
 		log.Printf("|⚙️ UPLOAD ACTION| File '%s' exists and will be overwritten as per OverwriteIfExists=true.", destinationPath)
@@ -87,7 +88,7 @@ func DoUpload(args models.UploadArgs) models.UploadResult {
 		// For now, any WriteFile error is treated generally.
 		msg := fmt.Sprintf("Failed to write file to '%s'.", destinationPath)
 		log.Printf("|⚙️ UPLOAD ACTION| %s: %v", msg, err)
-		return models.UploadResult{FilePath: destinationPath, Message: msg}
+		return models.UploadResult{}, fmt.Errorf("Failed to write file to '%s'.", destinationPath)
 	}
 	bytesWritten := int64(len(rawFileBytes))
 	log.Printf("|⚙️ UPLOAD ACTION| Successfully wrote %d bytes to '%s'.", bytesWritten, destinationPath)
@@ -111,7 +112,7 @@ func DoUpload(args models.UploadArgs) models.UploadResult {
 			ActualSha256: actualSha256,
 			Message:      finalMessage,
 			HashMatched:  false,
-		}
+		}, fmt.Errorf("hash verification failed")
 	}
 
 	log.Printf("|👊 UPLOAD SUCCESS| Upload successful and hash VERIFIED for %s.", destinationPath)
@@ -120,6 +121,6 @@ func DoUpload(args models.UploadArgs) models.UploadResult {
 		ActualSha256: actualSha256,
 		Message:      finalMessage,
 		HashMatched:  true,
-	}
+	}, nil
 
 }

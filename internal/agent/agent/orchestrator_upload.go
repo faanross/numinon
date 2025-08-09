@@ -30,8 +30,7 @@ func (a *Agent) orchestrateUpload(task models.ServerTaskResponse) models.AgentTa
 		task.TaskID, args.TargetFilename, args.TargetDirectory)
 
 	// Call the "doer" function
-	commandUpload := upload.New()                     // create os-specific Download struct ("decided" when compiled)
-	uploadResult, err := commandUpload.DoUpload(args) // Call the interface method
+	uploadResult, err := upload.DoUpload(args) // create os-specific Download struct ("decided" when compiled)
 
 	// REMEMBER uploadResult is models.UploadResult
 	// WE NEED TO WRAP IT IN models.AgentTaskResult.Output
@@ -64,7 +63,18 @@ func (a *Agent) orchestrateUpload(task models.ServerTaskResponse) models.AgentTa
 	} else {
 		// If we get here it means our doer call succeeded
 
-		finalResult.Output = uploadResult
+		outputJSON, err := json.Marshal(uploadResult)
+		if err != nil {
+			errMsg := fmt.Sprintf("Failed to marshal UploadResult for Task ID %s: %v", task.TaskID, err)
+			log.Printf("|❗ERR UPLOAD ORCHESTRATOR| %s", errMsg)
+			return models.AgentTaskResult{
+				TaskID: task.TaskID,
+				Status: models.StatusFailureUnmarshallError,
+				Error:  errMsg,
+			}
+		}
+
+		finalResult.Output = outputJSON
 
 		finalResult.Status = models.StatusSuccess
 		log.Printf("|✅ UPLOAD ORCHESTRATOR| Execution successful for Task ID %s.",

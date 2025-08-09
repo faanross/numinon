@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const serverAddr = "127.0.0.1"
+const serverAddr = "0.0.0.0"
 
 var serverPorts = []string{"8888"}
 

