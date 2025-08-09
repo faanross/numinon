@@ -131,12 +131,12 @@ func wsProcessIncomingMessage(conn *websocket.Conn, agentID string, agentProtoco
 	prettyResult := struct {
 		TaskID string `json:"task_id"`
 		Status string `json:"status"`
-		Output string `json:"output"` // Changed to string for display
+		Output any    `json:"output"` // Changed to string for display
 		Error  string `json:"error"`
 	}{
 		TaskID: result.TaskID,
 		Status: result.Status,
-		Output: string(result.Output), // Convert byte slice to string here
+		Output: result.Output, // Convert byte slice to string here
 		Error:  result.Error,
 	}
 

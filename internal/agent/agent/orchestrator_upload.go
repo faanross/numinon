@@ -64,11 +64,11 @@ func (a *Agent) orchestrateUpload(task models.ServerTaskResponse) models.AgentTa
 	} else {
 		// If we get here it means our doer call succeeded
 
-		finalResult.Output = uploadResult.Output
+		finalResult.Output = uploadResult
 
 		finalResult.Status = models.StatusSuccess
-		log.Printf("|✅ UPLOAD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
-			task.TaskID, len(finalResult.Output))
+		log.Printf("|✅ UPLOAD ORCHESTRATOR| Execution successful for Task ID %s.",
+			task.TaskID)
 	}
 	return finalResult
 }

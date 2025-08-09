@@ -5,14 +5,14 @@ type ServerTaskResponse struct {
 	TaskAvailable bool   `json:"task_available"`
 	TaskID        string `json:"task_id,omitempty"`
 	Command       string `json:"command,omitempty"`
-	Data          []byte `json:"data,omitempty"` // for example if command has arguments, a file (upload) etc
+	Data          any    `json:"data,omitempty"` // for example if command has arguments, a file (upload) etc
 }
 
 // AgentTaskResult represents the structure sent back to the /results endpoint.
 type AgentTaskResult struct {
 	TaskID     string `json:"task_id"`
 	Status     string `json:"status"`
-	Output     []byte `json:"output,omitempty"`
+	Output     any    `json:"output,omitempty"`
 	Error      string `json:"error,omitempty"`
 	FileSha256 string `json:"file_sha256,omitempty"`
 }

