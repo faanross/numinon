@@ -95,4 +95,5 @@ type UploadResult struct {
 	BytesWritten int64
 	ActualSha256 string
 	Message      string
+	HashMatched  bool
 }
