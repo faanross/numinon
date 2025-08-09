@@ -20,7 +20,7 @@ var embeddedAgentConfig = config.AgentConfig{
 	MinPaddingBytes:   64,
 	MaxPaddingBytes:   1024,
 	BeaconMode:        true,
-	UUID:              "8054b68b-da17-48db-92e3-245807cf1e20", // This will be the generated UUID pkg
+	UUID:              "d3ba2700-0518-49a5-8214-94ba48ca5356", // This will be the generated UUID pkg
 	SkipVerifyTLS:     true,
 }
 
