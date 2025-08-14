@@ -97,3 +97,9 @@ type UploadResult struct {
 	Message      string
 	HashMatched  bool
 }
+
+// DownloadFileArgs defines arguments for the "download_file" command.
+// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
+type DownloadFileArgs struct {
+	SourceFilePath string `json:"source_file_path"` // Absolute path of the file to download from the agent's system
+}
