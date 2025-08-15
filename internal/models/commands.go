@@ -89,7 +89,6 @@ type ProcessInfo struct {
 }
 
 // UploadResult holds the specific outcomes of the upload operation.
-// This is internal to the command logic before being mapped to models.TaskResult.
 type UploadResult struct {
 	FilePath     string // The path where the file was written
 	BytesWritten int64
@@ -98,8 +97,10 @@ type UploadResult struct {
 	HashMatched  bool
 }
 
-// DownloadFileArgs defines arguments for the "download_file" command.
-// Server marshals this to JSON and puts it in ServerTaskResponse.Data.
-type DownloadFileArgs struct {
-	SourceFilePath string `json:"source_file_path"` // Absolute path of the file to download from the agent's system
+// DownloadResult holds the specific outcomes of the upload operation.
+type DownloadResult struct {
+	RawFileBytes []byte // The actual content of the file read from disk
+	SourcePath   string // The path from which the file was read on the agent
+	FileSha256   string // SHA256 hash of RawFileBytes
+	Message      string // Any informational message for logging/output
 }

