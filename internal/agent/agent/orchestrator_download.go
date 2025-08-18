@@ -65,11 +65,20 @@ func (a *Agent) orchestrateDownload(task models.ServerTaskResponse) models.Agent
 		// If we get here it means our doer call succeeded
 		// Base64 encode the raw file bytes for transport
 		encodedContent := base64.StdEncoding.EncodeToString(downloadResult.RawFileBytes)
-		finalResult.Output = []byte(encodedContent)
-		finalResult.Status = models.StatusSuccess
 
-		log.Printf("|✅ DOWNLOAD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
-			task.TaskID, len(finalResult.Output))
+		// json.RawMessage expects valid JSON, so we need to marshal the string
+		// This will wrap it in quotes and escape as needed
+		encodedJSON, err := json.Marshal(encodedContent)
+		if err != nil {
+			finalResult.Error = fmt.Sprintf("Failed to encode result: %v", err)
+			finalResult.Status = models.StatusFailureUnmarshallError
+			log.Printf("|❗ERR DOWNLOAD ORCHESTRATOR| Failed to JSON-encode base64 content: %v", err)
+		} else {
+			finalResult.Output = encodedJSON // Now it's valid JSON
+			finalResult.Status = models.StatusSuccess
+			log.Printf("|✅ DOWNLOAD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
+				task.TaskID, len(finalResult.Output))
+		}
 	}
 	return finalResult
 }
