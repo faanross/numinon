@@ -5,6 +5,10 @@ import (
 )
 
 func SetupRoutes(r *chi.Mux) {
+
+	// Initialize task management system
+	InitializeTaskManagement()
+
 	// HTTP-based endpoints
 	r.Get("/", CheckinHandler)
 	r.Post("/", CheckinHandler)
@@ -13,4 +17,7 @@ func SetupRoutes(r *chi.Mux) {
 
 	// WS-based endpoint
 	r.Get("/ws", WSHandler)
+
+	// Debug endpoint for task statistics (remove in production)
+	r.Get("/debug/tasks", TaskStatsHandler)
 }
