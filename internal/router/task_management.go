@@ -2,24 +2,21 @@ package router
 
 import (
 	"log"
+	"numinon_shadow/internal/orchestration"
 	"numinon_shadow/internal/taskmanager"
 )
 
-// Global task manager instance (this will later be initialized in main.go or router setup)
+// Global instances for task and orchestration management
 var TaskManager taskmanager.TaskManager
-var ResultProcessors *taskmanager.ResultProcessorRegistry
+var Orchestrators *orchestration.Registry
 
-// InitializeTaskManagement sets up the task management system
+// InitializeTaskManagement sets up the task management and orchestration system
 func InitializeTaskManagement() {
 	// Create task manager
 	TaskManager = taskmanager.NewMemoryTaskStore()
 
-	// Create processor registry
-	ResultProcessors = taskmanager.NewResultProcessorRegistry()
+	// Create orchestrator registry
+	Orchestrators = orchestration.NewRegistry()
 
-	// Register command-specific processors (TODO implement these next)
-	// ResultProcessors.Register("download", &DownloadProcessor{})
-	// ResultProcessors.Register("upload", &UploadProcessor{})
-
-	log.Println("|📋 TASK MGR| Task management system initialized")
+	log.Println("|📋 TASK MGR| Task management and orchestration system initialized")
 }

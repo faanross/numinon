@@ -2,13 +2,11 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"numinon_shadow/internal/models"
 	"numinon_shadow/internal/taskmanager"
-	"path/filepath"
 )
 
 // CheckinHandler processes requests from clients checking in for tasks
@@ -45,16 +43,17 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add server-side metadata for download command
-	if command == "download" {
-		// Store where the server should save the downloaded file
-		saveDir := fmt.Sprintf("/var/numinon/downloads/%s", agentID)
-		task.Metadata["server_save_path"] = filepath.Join(saveDir, fmt.Sprintf("file_%s", task.ID))
+	// Use orchestrator to prepare the task (sets metadata, validates args, etc.)
+	if err := Orchestrators.PrepareTask(task); err != nil {
+		log.Printf("|❗ERR TASK| Failed to prepare task: %v", err)
+		http.Error(w, "Failed to prepare task", http.StatusInternalServerError)
+		return
+	}
 
-		// Update task with metadata
-		if err := TaskManager.UpdateTask(task); err != nil {
-			log.Printf("|❗WARN TASK| Failed to update task metadata: %v", err)
-		}
+	// Update task with any metadata set by the orchestrator
+	if err := TaskManager.UpdateTask(task); err != nil {
+		log.Printf("|❗WARN TASK| Failed to update task after preparation: %v", err)
+		// Continue anyway - task was created
 	}
 
 	// Populate response with task details
@@ -125,14 +124,15 @@ func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Process command-specific logic
-	if ResultProcessors != nil {
-		if err := ResultProcessors.Process(task); err != nil {
-			log.Printf("|❗ERR PROCESS| Command-specific processing failed for task %s: %v",
-				task.ID, err)
-			// Mark task as failed but still return success to agent
-			TaskManager.MarkFailed(task.ID, err.Error())
-		}
+	// Use orchestrator to process command-specific logic
+	if err := Orchestrators.ProcessResult(task, body); err != nil {
+		log.Printf("|❗ERR PROCESS| Command-specific processing failed for task %s: %v",
+			task.ID, err)
+		// Mark task as failed but still return success to agent
+		TaskManager.MarkFailed(task.ID, err.Error())
+	} else {
+		// Update task with any metadata changes from processing
+		TaskManager.UpdateTask(task)
 	}
 
 	// Pretty print for debugging
