@@ -33,3 +33,11 @@ type DownloadResult struct {
 	FileSha256   string // SHA256 hash of RawFileBytes
 	Message      string // Any informational message for logging/output
 }
+
+// RunCmdResult holds the specific outcomes of the command execution.
+type RunCmdResult struct {
+	CombinedOutput []byte // Combined stdout and stderr
+	ExitCode       int    // Exit code of the command. -1 if not obtainable (e.g., timeout, failed to start)
+	SystemError    string // Errors from the agent trying to run the command (e.g., path error, timeout before exec)
+	CommandError   string // Error messages if exit code was non-zero, or specific errors from the command's stderr
+}
