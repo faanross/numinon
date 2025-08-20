@@ -36,36 +36,39 @@ func (a *Agent) orchestrateRunCmd(task models.ServerTaskResponse) models.AgentTa
 	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{
 		TaskID: task.TaskID,
-		Output: nil,
-		Error:  "",
+		Output: runCmdResult.CombinedOutput,
 	}
 
-	if err != nil {
-		finalResult.Error = err.Error()
+	// Note: The 'execErr' from runner.Execute() is for catastrophic failures of the runner itself,
+	// not for command execution errors (which are in cmdResult.SystemError or cmdResult.ExitCode).
+	// Most of the time, execErr will be nil if the Execute method could attempt to run something.
+	if err != nil { // This would be an unexpected error from the Execute method itself
+		log.Printf("|❗CRIT RUN_CMD HANDLER| Unexpected error from runner.Execute for TaskID %s: %v", task.TaskID, err)
+		finalResult.Status = models.StatusFailureExecutionError
+		finalResult.Error = fmt.Sprintf("Internal runner error: %v. SystemMsg: %s. CommandMsg: %s", err, runCmdResult.SystemError, runCmdResult.CommandError)
+		return finalResult
+	}
 
-		log.Printf("|❗ERR RUN_CMD ORCHESTRATOR| Run_Cmd execution failed for Task ID %s: %s.",
-			task.TaskID, finalResult.Error)
-
-		// NOTE THIS NEEDS TO BE FIXED AND ADAPTED ONCE ACTUAL COMMAND HAS BEEN IMPLEMENTED IN DOER
-		errorString := finalResult.Error
-		switch {
-		case strings.Contains(errorString, "validation:"):
+	// Process based on cmdResult fields
+	if runCmdResult.SystemError != "" {
+		log.Printf("|❗ERR RUN_CMD HANDLER| System error for TaskID %s: %s", task.TaskID, runCmdResult.SystemError)
+		finalResult.Error = runCmdResult.SystemError
+		if strings.Contains(runCmdResult.SystemError, "timed out") {
+			finalResult.Status = models.StatusFailureTimeout
+		} else if strings.Contains(runCmdResult.SystemError, "validation:") {
 			finalResult.Status = models.StatusFailureInvalidArgs
-		case strings.Contains(errorString, "File not found"):
-			finalResult.Status = models.StatusFailureFileNotFound
-		case strings.Contains(errorString, "Permission denied"):
-			finalResult.Status = models.StatusFailurePermissionDenied
-		default:
-			finalResult.Status = models.StatusFailureReadError
+		} else {
+			finalResult.Status = models.StatusFailureExecError
 		}
+	} else if runCmdResult.ExitCode != 0 {
+		log.Printf("|INFO RUN_CMD HANDLER| Command for TaskID %s exited with code %d. Output may contain errors.", task.TaskID, runCmdResult.ExitCode)
+		finalResult.Status = models.StatusSuccessExitNonZero
+		finalResult.Error = fmt.Sprintf("Command exited with code %d. %s", runCmdResult.ExitCode, runCmdResult.CommandError)
 	} else {
-		// If we get here it means our doer call succeeded
-
-		finalResult.Output = runCmdResult.Output
-
+		log.Printf("|✅ RUN_CMD HANDLER| Command for TaskID %s executed successfully. Output length: %d", task.TaskID, len(runCmdResult.CombinedOutput))
 		finalResult.Status = models.StatusSuccess
-		log.Printf("|✅ RUN_CMD ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
-			task.TaskID, len(finalResult.Output))
 	}
+
 	return finalResult
+
 }

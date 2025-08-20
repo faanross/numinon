@@ -20,6 +20,8 @@ func New() CommandRunCmd {
 }
 
 // isPowerShellDefaultWindows is a helper for Windows default shell choice.
+// if ps is intended to be default - hardcode to true, if not false
+// TODO more elegant way to handle this
 func isPowerShellDefaultWindows() bool {
 	// On Windows, prefer PowerShell if no shell is specified.
 	// A more robust check could verify if 'powershell.exe' is in PATH.
@@ -35,7 +37,6 @@ func (wr *windowsRunCmd) DoRunCmd(args models.RunCmdArgs) (models.RunCmdResult, 
 	}
 
 	// Basic Validation
-	// This should be moved to server pre-send TODO
 	if strings.TrimSpace(args.CommandLine) == "" {
 		result.SystemError = "validation: CommandLine cannot be empty"
 		log.Printf("|❗ERR RUNCMD DOER| %s", result.SystemError)
@@ -47,7 +48,7 @@ func (wr *windowsRunCmd) DoRunCmd(args models.RunCmdArgs) (models.RunCmdResult, 
 	shellToUse := strings.ToLower(strings.TrimSpace(args.Shell))
 
 	// construct specific arguments based on shell selection
-	if shellToUse == "powershell" || (shellToUse == "" && isPowerShellDefaultWindows()) {
+	if shellToUse == "powershell" || "ps" || (shellToUse == "" && isPowerShellDefaultWindows()) {
 		cmdPath = "powershell.exe"
 		cmdArgs = []string{"-NoProfile", "-NonInteractive", "-NoLogo", "-Command", args.CommandLine}
 		log.Printf("|⚙️ RUNCMD ACTION| Using PowerShell: %s %s", cmdPath, strings.Join(cmdArgs, " "))

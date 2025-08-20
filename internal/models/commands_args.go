@@ -23,7 +23,7 @@ type DownloadArgs struct {
 // RunCmdArgs defines arguments for the "run_cmd" command.
 type RunCmdArgs struct {
 	CommandLine string `json:"command_line"`    // The full command string to be executed
-	Shell       string `json:"shell,omitempty"` // Optional: "cmd", "powershell", "sh", "bash". Agent default if empty.
+	Shell       string `json:"shell,omitempty"` // Optional: "cmd", "powershell", "ps". Agent default if empty.
 	// TimeoutSeconds int `json:"timeout_seconds,omitempty"` // DEFERRED: Agent uses internal default for now
 }
 

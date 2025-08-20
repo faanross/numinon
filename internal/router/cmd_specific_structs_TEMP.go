@@ -52,3 +52,19 @@ func returnDownloadStruct(w http.ResponseWriter) []byte {
 	return downloadArgsJSON
 
 }
+
+func returnRunCmdStruct(w http.ResponseWriter) []byte {
+
+	runCmdArguments := models.RunCmdArgs{
+		CommandLine: "whoami",
+	}
+
+	runCmdArgsJSON, err := json.Marshal(runCmdArguments)
+	if err != nil {
+		log.Printf("Failed to marshal runcmd args: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return nil
+	}
+	return runCmdArgsJSON
+
+}
