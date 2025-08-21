@@ -33,11 +33,14 @@ func (a *Agent) orchestrateRunCmd(task models.ServerTaskResponse) models.AgentTa
 	commandRunCmd := runcmd.New()                     // create os-specific Download struct ("decided" when compiled)
 	runCmdResult, err := commandRunCmd.DoRunCmd(args) // Call the interface method
 
-	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{
 		TaskID: task.TaskID,
-		Output: runCmdResult.CombinedOutput,
+		// Output will be set below after JSON encoding
 	}
+
+	// Add this right after creating finalResult:
+	outputJSON, _ := json.Marshal(string(runCmdResult.CombinedOutput))
+	finalResult.Output = outputJSON
 
 	// Note: The 'execErr' from runner.Execute() is for catastrophic failures of the runner itself,
 	// not for command execution errors (which are in cmdResult.SystemError or cmdResult.ExitCode).
