@@ -3,8 +3,14 @@
 package runcmd
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"log"
 	"numinon_shadow/internal/models"
+	"os/exec"
+	"strings"
+	"time"
 )
 
 const (
@@ -32,7 +38,7 @@ func (wr *windowsRunCmd) DoRunCmd(args models.RunCmdArgs) (models.RunCmdResult, 
 	fmt.Println("|✅ RUN_CMD DOER| The RUN_CMD command has been executed.")
 	fmt.Printf("|📋 RUN_CMD DETAILS| CommandLine='%s', Shell='%s'\n", args.CommandLine, args.Shell)
 
-	result := RunCommandResult{
+	result := models.RunCmdResult{
 		ExitCode: -1, // Default to fail, we'll update accordingly if succeeded
 	}
 
@@ -48,7 +54,7 @@ func (wr *windowsRunCmd) DoRunCmd(args models.RunCmdArgs) (models.RunCmdResult, 
 	shellToUse := strings.ToLower(strings.TrimSpace(args.Shell))
 
 	// construct specific arguments based on shell selection
-	if shellToUse == "powershell" || "ps" || (shellToUse == "" && isPowerShellDefaultWindows()) {
+	if shellToUse == "powershell" || shellToUse == "ps" || (shellToUse == "" && isPowerShellDefaultWindows()) {
 		cmdPath = "powershell.exe"
 		cmdArgs = []string{"-NoProfile", "-NonInteractive", "-NoLogo", "-Command", args.CommandLine}
 		log.Printf("|⚙️ RUNCMD ACTION| Using PowerShell: %s %s", cmdPath, strings.Join(cmdArgs, " "))
