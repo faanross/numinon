@@ -31,4 +31,5 @@ const (
 	StatusFailureExecError             = "failure_exec_error"
 	StatusFailureUnmarshallError       = "Failed to unmarshall JSON object"
 	StatusFailureUnknownCommand        = "The command is unknown - does not exists, or is not currently registered on agent"
+	StatusFailureNotSupported          = "This feature is not yet supported on this agent"
 )
