@@ -22,7 +22,7 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 	response.TaskAvailable = true
 
 	// Create command arguments (using existing function)
-	command := "run_cmd" // Hardcoded for now
+	command := "upload" // Hardcoded for now
 	var commandArgs json.RawMessage
 
 	switch command {
@@ -34,6 +34,8 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 		commandArgs = returnRunCmdStruct(w)
 	default:
 		// For commands without special args
+
+		log.Printf("|❗WARN TASK| Command not recognized: %s", command)
 		commandArgs = json.RawMessage("{}")
 	}
 

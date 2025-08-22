@@ -20,8 +20,9 @@ func InitializeTaskManagement() {
 
 	// Register command-specific orchestrators
 	downloadOrch := orchestration.NewDownloadOrchestrator("./downloads")
+	Orchestrators.Register("upload", downloadOrch)
 	Orchestrators.Register("download", downloadOrch)
+	Orchestrators.Register("run_cmd", downloadOrch)
 
 	log.Println("|📋 TASK MGR| Task management and orchestration system initialized")
-	log.Println("|📋 ORCH| Registered orchestrator for 'download' command")
 }
