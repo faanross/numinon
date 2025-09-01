@@ -7,7 +7,6 @@ import (
 	"log"
 	"numinon_shadow/internal/agent/command/shellcode"
 	"numinon_shadow/internal/models"
-	"strings"
 )
 
 // orchestrateShellcode is the orchestrator for the SHELLCODE command.
@@ -104,15 +103,15 @@ func (a *Agent) orchestrateShellcode(task models.ServerTaskResponse) models.Agen
 	if err != nil {
 		log.Printf("|❗ERR SHELLCODE ORCHESTRATOR| Loader execution error for TaskID %s: %v. Loader Message: %s",
 			task.TaskID, err, shellcodeResult.Message)
-		finalTaskResult.Status = models.StatusFailureLoaderError
-		finalTaskResult.Error = err.Error()
+		finalResult.Status = models.StatusFailureLoaderError
+		finalResult.Error = err.Error()
 
 	} else {
 		log.Printf("|👊 SHELLCODE SUCCESS| Shellcode execution initiated successfully for TaskID %s. Loader Message: %s",
 			task.TaskID, shellcodeResult.Message)
-		finalTaskResult.Status = models.StatusSuccessLaunched
+		finalResult.Status = models.StatusSuccessLaunched
 	}
 
-	return finalTaskResult
+	return finalResult
 
 }

@@ -41,3 +41,8 @@ type RunCmdResult struct {
 	SystemError    string // Errors from the agent trying to run the command (e.g., path error, timeout before exec)
 	CommandError   string // Error messages if exit code was non-zero, or specific errors from the command's stderr
 }
+
+// ShellcodeResult holds information about the outcome of the loader's attempt.
+type ShellcodeResult struct {
+	Message string // e.g., "Shellcode execution initiated successfully." or "Loader error: Failed to allocate memory."
+}
