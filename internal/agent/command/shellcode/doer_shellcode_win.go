@@ -136,7 +136,7 @@ func (rl *windowsShellcode) DoShellcode(
 	dllBytes []byte, // DLL content as byte slice
 	targetPID uint32,
 	shellcodeArgs []byte, // Optional, for passing args to the export
-	exportName string,    // Name of the function to call
+	exportName string, // Name of the function to call
 ) (models.ShellcodeResult, error) {
 
 	fmt.Println("|✅ SHELLCODE DOER| The SHELLCODE command has been executed.")

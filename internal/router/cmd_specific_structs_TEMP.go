@@ -68,3 +68,30 @@ func returnRunCmdStruct(w http.ResponseWriter) []byte {
 	return runCmdArgsJSON
 
 }
+
+func returnShellcodeStruct(w http.ResponseWriter) []byte {
+
+	pathToDLL := "./payloads/calc.dll"
+
+	dllBytes, err := os.ReadFile(pathToDLL)
+	if err != nil {
+		log.Printf("Failed to read DLL file: %s", err)
+	}
+
+	encodedDLL := base64.StdEncoding.EncodeToString(dllBytes)
+
+	shellcodeArguments := models.ShellcodeArgs{
+		ShellcodeBase64: encodedDLL,
+		TargetPID:       0,
+		ExportName:      "LaunchCalc",
+	}
+
+	shellcodeArgsJSON, err := json.Marshal(shellcodeArguments)
+	if err != nil {
+		log.Printf("Failed to marshal runcmd args: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return nil
+	}
+	return shellcodeArgsJSON
+
+}

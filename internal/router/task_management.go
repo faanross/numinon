@@ -22,10 +22,12 @@ func InitializeTaskManagement() {
 	downloadOrch := orchestration.NewDownloadOrchestrator("./downloads")
 	uploadOrch := orchestration.NewUploadOrchestrator()
 	runCmdOrch := orchestration.NewRunCmdOrchestrator()
+	shellcodeOrch := orchestration.NewShellcodeOrchestrator()
 
 	Orchestrators.Register("upload", uploadOrch)
 	Orchestrators.Register("download", downloadOrch)
 	Orchestrators.Register("run_cmd", runCmdOrch)
+	Orchestrators.Register("shellcode", shellcodeOrch)
 
 	log.Println("|📋 TASK MGR| Task management and orchestration system initialized")
 }
