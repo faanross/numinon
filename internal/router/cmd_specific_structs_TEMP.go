@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"numinon_shadow/internal/models"
 	"os"
+	"time"
 )
 
 func returnUploadStruct(w http.ResponseWriter) []byte {
@@ -93,5 +95,30 @@ func returnShellcodeStruct(w http.ResponseWriter) []byte {
 		return nil
 	}
 	return shellcodeArgsJSON
+
+}
+
+func returnEnumerateStruct(w http.ResponseWriter) []byte {
+	// 50/50 chance it will either be notepad or nothing
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	var processName string
+	if r.Intn(2) == 0 {
+		processName = "notepad.exe"
+	} else {
+		processName = ""
+	}
+
+	enumerateArguments := models.EnumerateArgs{
+		ProcessName: processName,
+	}
+
+	enumerateArgsJSON, err := json.Marshal(enumerateArguments)
+	if err != nil {
+		log.Printf("Failed to marshal enumerate args: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return nil
+	}
+	return enumerateArgsJSON
 
 }
