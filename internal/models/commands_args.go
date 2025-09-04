@@ -1,6 +1,8 @@
 package models
 
-import "numinon_shadow/internal/agent/config"
+import (
+	"numinon_shadow/internal/agent/config"
+)
 
 // -------------------------------------------------------------------
 // | All the command-specific ARGUMENT structs, i.e. SERVER -> AGENT |
@@ -44,13 +46,8 @@ type EnumerateArgs struct {
 
 // MorphArgs defines parameters that can be dynamically updated in the agent.
 type MorphArgs struct {
-	BaseSleep *string  `json:"base_sleep,omitempty"` // Duration string, e.g., "30s"
-	Jitter    *float64 `json:"jitter,omitempty"`     // e.g., 0.0 to 1.0
-	// CheckinMethod   *string  `json:"checkin_method,omitempty"` // "GET" or "POST"
-	// EnablePadding   *bool    `json:"enable_padding,omitempty"` // DEFERRED
-	// MinPaddingBytes *int     `json:"min_padding_bytes,omitempty"` // DEFERRED
-	// MaxPaddingBytes *int     `json:"max_padding_bytes,omitempty"` // DEFERRED
-	// ConnectionMode    *string  `json:"connection_mode,omitempty"` // DEFERRED
+	NewDelay  *string  `json:"new_delay,omitempty"`  // Duration string, e.g., "30s"
+	NewJitter *float64 `json:"new_jitter,omitempty"` // e.g., 0.0 to 1.0
 }
 
 // HopArgs defines parameters for the agent to transition its C2 communication.
