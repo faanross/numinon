@@ -24,12 +24,14 @@ func InitializeTaskManagement() {
 	runCmdOrch := orchestration.NewRunCmdOrchestrator()
 	shellcodeOrch := orchestration.NewShellcodeOrchestrator()
 	enumerateOrch := orchestration.NewEnumerationOrchestrator()
+	morphOrch := orchestration.NewMorphOrchestrator()
 
 	Orchestrators.Register("upload", uploadOrch)
 	Orchestrators.Register("download", downloadOrch)
 	Orchestrators.Register("run_cmd", runCmdOrch)
 	Orchestrators.Register("shellcode", shellcodeOrch)
 	Orchestrators.Register("enumerate", enumerateOrch)
+	Orchestrators.Register("morph", morphOrch)
 
 	log.Println("|📋 TASK MGR| Task management and orchestration system initialized")
 }

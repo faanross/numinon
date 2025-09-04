@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"numinon_shadow/internal/agent/command/morph"
 	"numinon_shadow/internal/models"
 	"strings"
 	"time"
@@ -28,13 +27,10 @@ func (a *Agent) orchestrateMorph(task models.ServerTaskResponse) models.AgentTas
 
 	log.Printf("|✅ ENUMERATE ORCHESTRATOR| Task ID: %s. Received MorphArgs: %+v", task.TaskID, args)
 
-
-
 	// this allows us to keep track of what individual parameters failed/succeed during morph
 	var updateMessages []string
 	configChanged := false    // Tracks if any *supported* config was actually changed
 	validationFailed := false // Tracks if any *supported* and *attempted* parameter failed validation
-
 
 	// Check if a new DELAY value has been issued
 	if args.NewDelay != nil {
@@ -56,7 +52,7 @@ func (a *Agent) orchestrateMorph(task models.ServerTaskResponse) models.AgentTas
 		} else {
 			a.config.Delay = newSleepDuration
 			msg := fmt.Sprintf("BaseSleep successfully updated to: %v", newSleepDuration)
-			log.Printf("|AGENT TASK MORPH| %s", msg)
+			log.Printf("|✅ ENUMERATE ORCHESTRATOR| %s", msg)
 			updateMessages = append(updateMessages, msg)
 			configChanged = true
 		}
@@ -75,7 +71,7 @@ func (a *Agent) orchestrateMorph(task models.ServerTaskResponse) models.AgentTas
 		} else {
 			a.config.Jitter = newJitter
 			msg := fmt.Sprintf("Jitter successfully updated to: %f", newJitter)
-			log.Printf("|AGENT TASK MORPH| %s", msg)
+			log.Printf("|✅ ENUMERATE ORCHESTRATOR| %s", msg)
 			updateMessages = append(updateMessages, msg)
 			configChanged = true
 		}
@@ -84,25 +80,28 @@ func (a *Agent) orchestrateMorph(task models.ServerTaskResponse) models.AgentTas
 	// --- Determine Final Status ---
 	finalStatus := models.StatusFailureMorphNoValidChanges // Default if nothing changed or only ignored params were sent
 
-	if configChanged { // If BaseSleep or Jitter was successfully changed
-		if validationFailed { // And if there was also an attempt to change BaseSleep/Jitter that failed validation
+	if configChanged {
+		if validationFailed {
 			finalStatus = models.StatusSuccessMorphPartial
 		} else { // All attempted (and supported) changes were successful
 			finalStatus = models.StatusSuccessMorphApplied
 		}
 	} else if validationFailed {
 		// No supported config was changed, but there was an attempt to change a supported param (BaseSleep/Jitter) which failed validation.
-		finalStatus = models.StatusFailureInvalidArgs // This status seems appropriate here.
+		finalStatus = models.StatusFailureInvalidArgs
 	}
 	// If only "not supported" messages are present in updateMessages, and no valid changes made to BaseSleep/Jitter,
 	// and no validation failures for BaseSleep/Jitter, then finalStatus remains StatusFailureMorphNoValidChanges.
 
-	log.Printf("|AGENT TASK MORPH| Finalizing morph task. Status: %s. Output messages: %s", finalStatus, strings.Join(updateMessages, "; "))
+	log.Printf("|✅ ENUMERATE ORCHESTRATOR| Finalizing morph task. Status: %s. Output messages: %s", finalStatus, strings.Join(updateMessages, "; "))
 
-	return models.models.AgentTaskResult{
+	finalOutput := strings.Join(updateMessages, "; ")
+	outputJSON, _ := json.Marshal(finalOutput)
+
+	return models.AgentTaskResult{
 		TaskID: task.TaskID,
 		Status: finalStatus,
-		Output: []byte(strings.Join(updateMessages, "; ")),
+		Output: outputJSON,
 		Error:  "", // Specific validation errors are part of the Output messages.
 	}
 }

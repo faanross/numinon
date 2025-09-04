@@ -122,3 +122,22 @@ func returnEnumerateStruct(w http.ResponseWriter) []byte {
 	return enumerateArgsJSON
 
 }
+
+// for the demo we'll do new delay of 10 and jitter of 50 (baseline is 5s and 0.20)
+func returnMorphStruct(w http.ResponseWriter) []byte {
+	newDelay := "10s"
+	newJitter := 0.5
+
+	morphArguments := models.MorphArgs{
+		NewDelay:  &newDelay,
+		NewJitter: &newJitter,
+	}
+
+	morphArgsJSON, err := json.Marshal(morphArguments)
+	if err != nil {
+		log.Printf("Failed to marshal morph args: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return nil
+	}
+	return morphArgsJSON
+}
