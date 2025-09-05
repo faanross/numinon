@@ -96,7 +96,12 @@ func (a *Agent) orchestrateMorph(task models.ServerTaskResponse) models.AgentTas
 	log.Printf("|✅ ENUMERATE ORCHESTRATOR| Finalizing morph task. Status: %s. Output messages: %s", finalStatus, strings.Join(updateMessages, "; "))
 
 	finalOutput := strings.Join(updateMessages, "; ")
-	outputJSON, _ := json.Marshal(finalOutput)
+	outputJSON, err := json.Marshal(finalOutput)
+	if err != nil {
+		// This should never happen for a string, but just in case
+		log.Printf("|❗ERR MORPH ORCHESTRATOR| Failed to marshal output: %v", err)
+		outputJSON = []byte("null") // Fallback to valid JSON
+	}
 
 	return models.AgentTaskResult{
 		TaskID: task.TaskID,
