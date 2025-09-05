@@ -102,8 +102,8 @@ func (a *Agent) runWsLoop() error {
 		} // End of inner read loop
 
 		// If we broke out of readLoop due to error, sleep before retrying connection
-		log.Printf("|AGENT LOOP WS|-> Read loop exited. Sleeping before reconnect attempt...")
-		time.Sleep(a.calculateSleepWithJitter())
+		// log.Printf("|AGENT LOOP WS|-> Read loop exited. Sleeping before reconnect attempt...")
+		// time.Sleep(a.calculateSleepWithJitter())
 
 	} // End of outer connection loop
 }

@@ -2,7 +2,7 @@
 # This file is loaded by the agent at startup.
 # If this file is not found or is invalid, the agent will use built-in default values from config.go
 
-protocol: "H1TLS" # Options: H1C, H1TLS, H2TLS, H3, WS, WSS
+protocol: "WS" # Options: H1C, H1TLS, H2TLS, H3, WS, WSS
 server_ip: "192.168.2.249"
 server_port: "8888" # Ensure this matches the desired listener on the server
 

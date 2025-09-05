@@ -32,7 +32,7 @@ func main() {
 	var activeListeners []listener.Listener
 
 	for _, serverPort := range serverPorts {
-		newConfig := listener.NewListenerConfig(listener.TypeHTTP1TLS, serverAddr, serverPort, r)
+		newConfig := listener.NewListenerConfig(listener.TypeWebsocketClear, serverAddr, serverPort, r)
 
 		l, err := listener.NewListener(*newConfig)
 		if err != nil {
