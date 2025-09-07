@@ -44,7 +44,8 @@ func (a *Agent) attemptHopSequence(localConfigForHop config.AgentConfig, current
 
 	log.Printf("%s Prospective communicator %s created.", logPfx, prospectiveNewComm.Type())
 
-	// 2. Test New Channel Viability
+	// Test New Channel Viability
+	// We first check to ensure we can connect before making the hop
 	var testChannelErr error
 	log.Printf("%s Attempting Connect() with prospective %s...", logPfx, prospectiveNewComm.Type())
 	connectErr := prospectiveNewComm.Connect()
@@ -64,11 +65,11 @@ func (a *Agent) attemptHopSequence(localConfigForHop config.AgentConfig, current
 				testChannelErr = httpTestErr
 			}
 		}
-		// For WebSocket, a successful Connect() is sufficient. We no longer do a blocking read.
-		// The 'else if isNewProtoWs' block and its call to ReadTaskMessage() has been removed.
+		// For WebSocket, a successful Connect() is sufficient.
+
 	}
 
-	// 3. Evaluate Test and Commit or Abort Hop
+	// Evaluate Test and Commit or Abort Hop
 	if testChannelErr != nil {
 		log.Printf("|❗ERR %s| New channel %s NOT viable (Error during connect/test: %v). Aborting hop.",
 			logPfx, prospectiveNewComm.Type(), testChannelErr)

@@ -12,6 +12,8 @@ import (
 
 // runWsLoop handles the persistent connection and message handling for WebSocket protocols.
 func (a *Agent) runWsLoop() error {
+	logPfx := "|🐇 ATTEMPT HOP|"
+
 	log.Println("|AGENT LOOP WS|-> WebSocket loop starting...")
 
 	if a.config.Protocol != config.WebsocketClear && a.config.Protocol != config.WebsocketSecure {
@@ -28,7 +30,39 @@ func (a *Agent) runWsLoop() error {
 	// --- Connection Loop ---
 	// This outer loop handles attempting to connect/reconnect.
 	for {
+		// --- Hop Check and Delegate to attemptHopSequence ---
+		a.hopMutex.Lock()
+		needsToHop := a.requestingHop
+		configPtrForHop := a.pendingHopConfig
+		if needsToHop && configPtrForHop != nil {
+			localConfigCopyForHop := *configPtrForHop
+			a.requestingHop = false
+			a.pendingHopConfig = nil
+			a.hopMutex.Unlock() // Unlock before calling attemptHopSequence
 
+			log.Printf("%s Hop requested. Current comm: %s. New target protocol: %s.",
+				logPfx, a.communicator.Type(), localConfigCopyForHop.Protocol)
+
+			hopSuccessful, familyChanged, criticalHopErr := a.attemptHopSequence(localConfigCopyForHop, false /* currentLoopTypeIsHttp */)
+			if criticalHopErr != nil {
+				log.Printf("|❗CRIT %s| Critical error during hop sequence commit: %v. Terminating loop.", logPfx, criticalHopErr)
+				return criticalHopErr
+			}
+			if hopSuccessful {
+				if familyChanged { // Means we hopped from WS to HTTP
+					log.Printf("%s Hop successful, protocol family changed (WS to HTTP). Returning ErrHopProtocolTypeChange.", logPfx)
+					return ErrHopProtocolTypeChange
+				}
+				// Hopped from WS to another WS successfully
+				log.Printf("%s Hop successful to new WS-family protocol %s. Re-initializing WS loop state and reconnecting.", logPfx, a.config.Protocol)
+				continue // Restart outer connection loop
+			}
+			// Hop aborted safely
+			log.Printf("%s Hop sequence aborted or failed validation. Continuing with current communicator %s.", logPfx, a.communicator.Type())
+		} else {
+			a.hopMutex.Unlock() // Must unlock if not hopping
+		}
+		// --- End of Hop Processing Logic ---
 		select {
 		case <-a.stopChan: // Check for stop signal before attempting connection
 			log.Println("|AGENT LOOP WS|-> Stop signal received, exiting WS loop.")

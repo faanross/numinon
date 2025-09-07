@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var autoPushDelay = time.Second * 3
+var autoPushDelay = time.Second * 6
 
 var counter = 0
 
@@ -69,27 +69,37 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 			switch counter {
 			case 0:
 				command = "download"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnDownloadStruct(w)
 			case 1:
 				command = "upload"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnUploadStruct(w)
 			case 2:
 				command = "run_cmd"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnRunCmdStruct(w)
 			case 3:
 				command = "enumerate"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnEnumerateStruct(w)
 			case 4:
 				command = "enumerate"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnEnumerateStruct(w)
 			case 5:
 				command = "enumerate"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnEnumerateStruct(w)
 			case 6:
 				command = "enumerate"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
 				commandArgs = returnEnumerateStruct(w)
 			case 7:
-				return
+				command = "hop"
+				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
+				commandArgs = returnHopStruct(w)
+
 			default:
 				return
 			}

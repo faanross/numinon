@@ -33,7 +33,7 @@ func (a *Agent) runHttpLoop() error {
 			if hopSuccessful {
 				if familyChanged {
 					log.Printf("%s Hop successful, protocol family changed. Returning ErrHopProtocolTypeChange.", logPfx)
-					return ErrHopProtocolTypeChange
+					return ErrHopProtocolTypeChange // if we switch to WS-runloop, break out of this loop
 				}
 				log.Printf("%s Hop successful, protocol family HTTP. Continuing loop immediately.", logPfx)
 				continue // Hop done, new HTTP comm active, restart loop iteration

