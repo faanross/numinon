@@ -10,10 +10,40 @@ import (
 
 // runHttpLoop handles the main check-in cycle for HTTP-based protocols using time.Sleep and jitter.
 func (a *Agent) runHttpLoop() error {
+	logPfx := "|🐇 ATTEMPT HOP|"
 	log.Println("|AGENT LOOP HTTP|-> HTTP loop started.")
 
 	for {
-		// Check for stop signal at the beginning of each iteration (non-blocking)
+		// CHECK IF A HOP COMMAND HAS BEEN ISSUED AND ATTEMPT HOP
+		// --- Hop Check and Delegate to attemptHopSequence ---
+		a.hopMutex.Lock()
+		needsToHop := a.requestingHop         // hop orchestrator will set this to true
+		configPtrForHop := a.pendingHopConfig // Get pointer to the new config we created
+		if needsToHop && configPtrForHop != nil {
+			localConfigCopyForHop := *configPtrForHop // Make a copy before releasing mutex & resetting flags
+			a.requestingHop = false                   // reset the flag - "consume once"
+			a.pendingHopConfig = nil                  // reset the new config for future use
+			a.hopMutex.Unlock()                       // Unlock before calling attemptHopSequence
+
+			hopSuccessful, familyChanged, criticalHopErr := a.attemptHopSequence(localConfigCopyForHop, true /* currentLoopTypeIsHttp */)
+			if criticalHopErr != nil {
+				log.Printf("|❗CRIT %s| Critical error during hop sequence commit: %v. Terminating loop.", logPfx, criticalHopErr)
+				return criticalHopErr // Fatal error during hop
+			}
+			if hopSuccessful {
+				if familyChanged {
+					log.Printf("%s Hop successful, protocol family changed. Returning ErrHopProtocolTypeChange.", logPfx)
+					return ErrHopProtocolTypeChange
+				}
+				log.Printf("%s Hop successful, protocol family HTTP. Continuing loop immediately.", logPfx)
+				continue // Hop done, new HTTP comm active, restart loop iteration
+			}
+			// If hopSuccessful is false, it means hop was aborted safely, continue with old communicator.
+			log.Printf("%s Hop sequence aborted or failed validation. Continuing with current communicator %s.", logPfx, a.communicator.Type())
+		} else {
+			a.hopMutex.Unlock() // Must unlock if not hopping
+		}
+
 		select {
 		// This will come from our Stop() function
 		case <-a.stopChan:
