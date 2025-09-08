@@ -2,6 +2,7 @@ package router
 
 import (
 	"log"
+	"numinon_shadow/internal/listener"
 	"numinon_shadow/internal/orchestration"
 	"numinon_shadow/internal/taskmanager"
 )
@@ -11,7 +12,7 @@ var TaskManager taskmanager.TaskManager
 var Orchestrators *orchestration.Registry
 
 // InitializeTaskManagement sets up the task management and orchestration system
-func InitializeTaskManagement() {
+func InitializeTaskManagement(listenerMgr *listener.Manager) {
 	// Create task manager
 	TaskManager = taskmanager.NewMemoryTaskStore()
 
@@ -25,6 +26,7 @@ func InitializeTaskManagement() {
 	shellcodeOrch := orchestration.NewShellcodeOrchestrator()
 	enumerateOrch := orchestration.NewEnumerationOrchestrator()
 	morphOrch := orchestration.NewMorphOrchestrator()
+	hopOrch := orchestration.NewHopOrchestrator(listenerMgr)
 
 	Orchestrators.Register("upload", uploadOrch)
 	Orchestrators.Register("download", downloadOrch)
@@ -32,6 +34,7 @@ func InitializeTaskManagement() {
 	Orchestrators.Register("shellcode", shellcodeOrch)
 	Orchestrators.Register("enumerate", enumerateOrch)
 	Orchestrators.Register("morph", morphOrch)
+	Orchestrators.Register("hop", hopOrch)
 
 	log.Println("|📋 TASK MGR| Task management and orchestration system initialized")
 }

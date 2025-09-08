@@ -93,16 +93,33 @@ func (a *Agent) calculateSleepWithJitter() time.Duration {
 func (a *Agent) Start() error {
 	log.Printf("|AGENT START|-> Starting agent main loop for protocol %s...", a.communicator.Type())
 
-	switch a.communicator.Type() {
-	case config.HTTP1Clear, config.HTTP1TLS, config.HTTP2TLS, config.HTTP3:
-		log.Println("|AGENT START|-> Entering HTTP-based run loop.")
-		return a.runHttpLoop()
-	case config.WebsocketClear, config.WebsocketSecure:
-		log.Println("|AGENT START|-> Entering WebSocket-based run loop.")
-		return a.runWsLoop()
-	default:
-		log.Printf("|❗ERR AGENT START| Unknown or unsupported communicator type: %s", a.communicator.Type())
-		return fmt.Errorf("unknown communicator type: %s", a.communicator.Type())
+	// Outer loop to handle protocol family changes
+	for {
+		var err error
+
+		// Determine which runloop to use based on current protocol
+		switch a.communicator.Type() {
+		case config.HTTP1Clear, config.HTTP1TLS, config.HTTP2TLS, config.HTTP3:
+			log.Println("|AGENT START|-> Entering HTTP-based run loop.")
+			err = a.runHttpLoop()
+
+		case config.WebsocketClear, config.WebsocketSecure:
+			log.Println("|AGENT START|-> Entering WebSocket-based run loop.")
+			err = a.runWsLoop()
+
+		default:
+			log.Printf("|❗ERR AGENT START| Unknown or unsupported communicator type: %s", a.communicator.Type())
+			return fmt.Errorf("unknown communicator type: %s", a.communicator.Type())
+		}
+
+		// Check if we need to restart with a different protocol family
+		if err == ErrHopProtocolTypeChange {
+			log.Printf("|AGENT START|-> Protocol family changed, restarting with new runloop for %s...", a.communicator.Type())
+			continue // Loop back to switch statement with new protocol
+		}
+
+		// Any other error (including nil) exits the Start method
+		return err
 	}
 }
 
