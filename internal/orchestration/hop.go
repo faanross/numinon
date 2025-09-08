@@ -24,7 +24,10 @@ func (d *HopOrchestrator) PrepareTask(task *taskmanager.Task) error {
 		return fmt.Errorf("invalid Hop arguments: %w", err)
 	}
 
-	// Morph has no additional preparation work to do, so just validation is good
+	// START NEW LISTENER
+	// Main issue here is we need access to router (r)
+	// What is the best way to do this?
+	// WHY? We need to create NewListenerConfig, it's the 4th argument
 
 	return nil
 }
@@ -36,6 +39,8 @@ func (d *HopOrchestrator) ValidateArgs(args json.RawMessage) error {
 
 	if err := json.Unmarshal(args, &hopArgs); err != nil {
 	}
+
+	// TODO add our validation arguments
 
 	return nil
 }
