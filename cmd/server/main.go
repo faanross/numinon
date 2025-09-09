@@ -6,10 +6,10 @@ import (
 	"log"
 	"numinon_shadow/internal/listener"
 	"numinon_shadow/internal/router"
+	"numinon_shadow/internal/tracker"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 const serverAddr = "0.0.0.0"
@@ -23,11 +23,14 @@ func main() {
 	// Create router
 	r := chi.NewRouter()
 
-	// Create listener manager with the router
-	listenerMgr := listener.NewManager(r)
+	// Create agent tracker
+	agentTracker := tracker.NewTracker()
+
+	// Create listener manager with tracker
+	listenerMgr := listener.NewManager(r, agentTracker)
 
 	// Setup routes with the manager
-	router.SetupRoutesWithManager(r, listenerMgr)
+	router.SetupRoutesWithManagerAndTracker(r, listenerMgr, agentTracker)
 
 	// Create initial listeners
 	for _, port := range serverPorts {

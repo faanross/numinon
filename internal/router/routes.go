@@ -3,12 +3,16 @@ package router
 import (
 	"github.com/go-chi/chi/v5"
 	"numinon_shadow/internal/listener"
+	"numinon_shadow/internal/tracker"
 )
 
-// SetupRoutesWithManager sets up routes with listener management capability
-func SetupRoutesWithManager(r *chi.Mux, listenerMgr *listener.Manager) {
-	// Initialize with listener manager for HOP support
-	InitializeTaskManagement(listenerMgr)
+// SetupRoutesWithManagerAndTracker sets up routes with FULL support
+func SetupRoutesWithManagerAndTracker(r *chi.Mux, listenerMgr *listener.Manager, agentTracker *tracker.Tracker) {
+	// Set global tracker reference for handlers to use
+	AgentTracker = agentTracker
+
+	// Initialize with both manager and tracker
+	InitializeTaskManagementWithFullSupport(listenerMgr, agentTracker)
 
 	setupHandlers(r)
 }

