@@ -4,23 +4,27 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"numinon_shadow/internal/tracker"
 	"sync"
+	"time"
 )
 
 // Manager handles the lifecycle of multiple listeners
 type Manager struct {
-	mu        sync.RWMutex
-	listeners map[string]Listener // key: listenerID
-	router    http.Handler        // Shared router for all listeners
-	stopChan  chan struct{}       // For graceful shutdown
+	mu           sync.RWMutex
+	listeners    map[string]Listener // key: listenerID
+	router       http.Handler        // Shared router for all listeners
+	stopChan     chan struct{}       // For graceful shutdown
+	agentTracker *tracker.Tracker    // tracks + manages agent <-> listener life cycles
 }
 
 // NewManager creates a new listener manager
-func NewManager(router http.Handler) *Manager {
+func NewManager(router http.Handler, agentTracker *tracker.Tracker) *Manager {
 	return &Manager{
-		listeners: make(map[string]Listener),
-		router:    router,
-		stopChan:  make(chan struct{}),
+		listeners:    make(map[string]Listener),
+		router:       router,
+		stopChan:     make(chan struct{}),
+		agentTracker: agentTracker,
 	}
 }
 
@@ -58,8 +62,6 @@ func (m *Manager) CreateListener(lType ListenerType, ip string, port string) (st
 
 	return l.ID(), nil
 }
-
-// StopListener stops and removes a specific listener
 func (m *Manager) StopListener(listenerID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -67,6 +69,15 @@ func (m *Manager) StopListener(listenerID string) error {
 	l, exists := m.listeners[listenerID]
 	if !exists {
 		return fmt.Errorf("listener %s not found", listenerID)
+	}
+
+	// Check if safe to stop
+	if m.agentTracker != nil {
+		canStop, reason := m.agentTracker.CanStopListener(listenerID)
+		if !canStop {
+			return fmt.Errorf("cannot stop listener %s: %s", listenerID, reason)
+		}
+		log.Printf("|✅ MGR| Safe to stop listener %s: %s", listenerID, reason)
 	}
 
 	// Stop the listener
@@ -79,6 +90,24 @@ func (m *Manager) StopListener(listenerID string) error {
 
 	log.Printf("|🛑 MGR| Stopped and removed listener %s", listenerID)
 	return nil
+}
+
+// TryStopListener attempts to stop a listener, with retries if agents are still connected
+func (m *Manager) TryStopListener(listenerID string, maxRetries int, retryDelay time.Duration) error {
+	for i := 0; i < maxRetries; i++ {
+		err := m.StopListener(listenerID)
+		if err == nil {
+			return nil // Success
+		}
+
+		if i < maxRetries-1 {
+			log.Printf("|⏳ MGR| Cannot stop listener yet (%s), retry %d/%d in %v",
+				err, i+1, maxRetries, retryDelay)
+			time.Sleep(retryDelay)
+		}
+	}
+
+	return fmt.Errorf("failed to stop listener %s after %d retries", listenerID, maxRetries)
 }
 
 // GetListener retrieves a listener by ID

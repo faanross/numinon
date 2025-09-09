@@ -7,13 +7,36 @@ import (
 	"net/http"
 	"numinon_shadow/internal/models"
 	"numinon_shadow/internal/taskmanager"
+	"numinon_shadow/internal/tracker"
 )
+
+// AgentTracker is our global tracker reference (set during initialization)
+var AgentTracker *tracker.Tracker
 
 // CheckinHandler processes requests from clients checking in for tasks
 func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
 	agentID := r.Header.Get("Agent-ID")
 	log.Printf("|✅ CHK_IN| Received check-in %s from Agent ID: %s via %s", r.Method, agentID, r.RemoteAddr)
+
+	// Track this connection if we have a tracker
+	if AgentTracker != nil {
+		// Determine listener ID from the request
+		// This might require adding the listener ID to the request context
+		listenerID := r.Context().Value("listenerID").(string) // TODO need to set this
+		protocol := determineProtocol(r)
+
+		err := AgentTracker.RegisterConnection(
+			agentID,
+			listenerID,
+			protocol,
+			r.RemoteAddr,
+			tracker.TypeHTTP,
+		)
+		if err != nil {
+			log.Printf("|⚠️ TRACKER| Failed to register connection: %v", err)
+		}
+	}
 
 	var response models.ServerTaskResponse
 
@@ -95,6 +118,11 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 	agentID := r.Header.Get("Agent-ID")
 	log.Printf("|✅ RESULT| Received results POST from Agent ID: %s via %s", agentID, r.RemoteAddr)
+
+	// Update last seen
+	if AgentTracker != nil {
+		AgentTracker.UpdateLastSeen(agentID)
+	}
 
 	// Read the raw body
 	body, err := io.ReadAll(r.Body)
@@ -184,4 +212,13 @@ func TaskStatsHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Stats not available", http.StatusNotImplemented)
 	}
+}
+
+// Helper function to determine protocol from request
+func determineProtocol(r *http.Request) string {
+	if r.TLS != nil {
+		// TODO add logic to also parse for HTTP/2 or HTTP/3 here
+		return "H1TLS"
+	}
+	return "H1C"
 }
