@@ -19,7 +19,9 @@ const (
 	ActionTaskAgentHop              ActionType = "TASK_AGENT_HOP"
 
 	// Agent & Server Management
-	ActionListAgents      ActionType = "LIST_AGENTS"
-	ActionGenerateAgent   ActionType = "GENERATE_AGENT_BINARY"
-	ActionGetServerStatus ActionType = "GET_SERVER_STATUS"
+	ActionListAgents            ActionType = "LIST_AGENTS"
+	ActionGenerateAgent         ActionType = "GENERATE_AGENT_BINARY"
+	ActionGetServerStatus       ActionType = "GET_SERVER_STATUS"
+	ActionGetAgentDetails       string     = "GET_AGENT_DETAILS"
+	ActionTaskAgentReportConfig string     = "TASK_AGENT_REPORT_CONFIG"
 )
