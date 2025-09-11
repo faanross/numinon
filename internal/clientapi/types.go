@@ -15,6 +15,6 @@ const (
 	DataTypeNewAgentNotification     DataType = "NEW_AGENT_NOTIFICATION"
 	DataTypeGeneratedAgentConfig     DataType = "GENERATED_AGENT_CONFIG" // For ActionGenerateAgent response
 	DataTypeError                    DataType = "ERROR_DETAILS"          // For a more structured error in Payload
-	DataTypeListenerStopConfirmation string   = "LISTENER_STOP_CONFIRMATION"
-	DataTypeErrorDetails             string   = "ERROR_DETAILS" // Generic for structured error payloads
+	DataTypeListenerStopConfirmation DataType = "LISTENER_STOP_CONFIRMATION"
+	DataTypeErrorDetails             DataType = "ERROR_DETAILS" // Generic for structured error payloads
 )
