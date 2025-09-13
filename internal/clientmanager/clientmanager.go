@@ -37,34 +37,27 @@ type clientSession struct {
 // clientSessionManagerImpl is the central hub for managing all client sessions.
 // It maintains the registry of active sessions and routes messages.
 type clientSessionManagerImpl struct {
-	// A map of all active sessions, keyed by a unique session ID.
-	sessions map[string]*clientSession
-
-	// Channel for new sessions to register.
-	register chan *clientSession
-
-	// Channel for sessions to unregister.
+	sessions   map[string]*clientSession
+	register   chan *clientSession
 	unregister chan *clientSession
-
-	// Channel for broadcasting messages to all sessions.
-	broadcast chan []byte
+	broadcast  chan []byte
 
 	// --- Dependencies on other managers ---
 	listenerManager clientapi.ListenerManager
-	taskManager     clientapi.TaskManager
+	taskBroker      clientapi.TaskBroker
 	agentStateMgr   clientapi.AgentStateManager
 }
 
 // New creates a new clientSessionManagerImpl and starts its main run loop as a goroutine.
 // Remember -> There is one goroutine for manager as a whole (implicitly thread-safe) + 2 per session (R + W pumps)
-func New(lm clientapi.ListenerManager, tm clientapi.TaskManager, asm clientapi.AgentStateManager) *clientSessionManagerImpl {
+func New(lm clientapi.ListenerManager, tb clientapi.TaskBroker, asm clientapi.AgentStateManager) *clientSessionManagerImpl {
 	csm := &clientSessionManagerImpl{
 		sessions:        make(map[string]*clientSession),
 		register:        make(chan *clientSession),
 		unregister:      make(chan *clientSession),
 		broadcast:       make(chan []byte),
 		listenerManager: lm,
-		taskManager:     tm,
+		taskBroker:      tb,
 		agentStateMgr:   asm,
 	}
 	// Launch the central hub in the background.
@@ -222,7 +215,7 @@ func (m *clientSessionManagerImpl) DispatchRequest(sessionID string, req clienta
 
 		var payload clientapi.TaskAgentPayload
 		if err = json.Unmarshal(req.Payload, &payload); err == nil {
-			response, err = m.taskManager.QueueAgentTask(ctx, req, sessionID)
+			response, err = m.taskBroker.QueueAgentTask(ctx, req, sessionID)
 		}
 
 	case clientapi.ActionListAgents:

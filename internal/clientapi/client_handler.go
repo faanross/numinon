@@ -9,8 +9,9 @@ import (
 // CSM is a package-level variable that will hold the global ClientSessionManager instance
 var CSM ClientSessionManager
 
-// TM is a package-level variable that will hold the global TaskManager instance
-var TM TaskManager
+// TM is a package-level variable that will hold the global TaskBroker instance
+// TODO replace with dependency injection
+var TM TaskBroker
 
 // upgrader updates HTTP -> WS
 var upgrader = websocket.Upgrader{

@@ -35,18 +35,20 @@ type ListenerManager interface {
 	Shutdown(ctx context.Context) error
 }
 
-// TaskManager accepts an agent tasking request from client and adds it to the TaskStore
-// and return an acknowledgment (typically StatusPending) to the operator.
-// Further: if agent is WS(S) -> push task immediately
+// TaskBroker acts as a bridge between operator requests and the core task management system.
+// It translates operator commands into tasks, delegates to the actual TaskManager,
+// and ensures results are routed back to the correct operator.
+// This is NOT a task storage system - it's a coordinator that uses the existing TaskManager from pkg taskmanager
 
-type TaskManager interface {
+type TaskBroker interface { // <- Changed from TaskManager
 	// QueueAgentTask takes a request from an operator and queues it for the specified agent.
 	QueueAgentTask(ctx context.Context, req ClientRequest, operatorSessionID string) (ServerResponse, error)
 
 	// ProcessAgentResult takes a completed task result from an agent and forwards the result to the operator.
 	ProcessAgentResult(actualResult models.AgentTaskResult) error
 
-	// TODO Further interactions, like handling task results and notifying operators, will be added later.
+	// GetTaskOwner returns the operator session ID that created a specific task
+	GetTaskOwner(taskID string) (string, error)
 }
 
 // AgentStateManager defines operations for managing known agent state from the API layer.
