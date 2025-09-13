@@ -12,11 +12,12 @@ import (
 	"syscall"
 )
 
-const serverAddr = "0.0.0.0"
-
-var serverPorts = []string{"8888"}
-
 func main() {
+
+	log.Println("|👽 SERVER|-> Starting Numinon Server...")
+
+	// (1) SETUP SIGNALS AND CHANNELS
+	stopChan := make(chan struct{})
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
@@ -31,18 +32,6 @@ func main() {
 
 	// Setup routes with the manager
 	router.SetupRoutesWithManagerAndTracker(r, listenerMgr, agentTracker)
-
-	// Create initial listeners
-	for _, port := range serverPorts {
-		_, err := listenerMgr.CreateListener(
-			listener.TypeWebsocketClear,
-			serverAddr,
-			port,
-		)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
 
 	fmt.Println("Server started, all listeners now running")
 

@@ -22,6 +22,6 @@ const (
 	ActionListAgents            ActionType = "LIST_AGENTS"
 	ActionGenerateAgent         ActionType = "GENERATE_AGENT_BINARY"
 	ActionGetServerStatus       ActionType = "GET_SERVER_STATUS"
-	ActionGetAgentDetails       string     = "GET_AGENT_DETAILS"
-	ActionTaskAgentReportConfig string     = "TASK_AGENT_REPORT_CONFIG"
+	ActionGetAgentDetails       ActionType = "GET_AGENT_DETAILS"
+	ActionTaskAgentReportConfig ActionType = "TASK_AGENT_REPORT_CONFIG"
 )

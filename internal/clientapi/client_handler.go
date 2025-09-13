@@ -1,8 +1,6 @@
 package clientapi
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"

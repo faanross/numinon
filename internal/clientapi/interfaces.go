@@ -1,0 +1,66 @@
+package clientapi
+
+import (
+	"context"
+	"github.com/gorilla/websocket"
+	"numinon_shadow/internal/models"
+)
+
+// ClientSession represents an active operator client connection.
+type ClientSession interface {
+	ID() string                         // Returns the unique session ID.
+	Send(response ServerResponse) error // Sends a message to this specific client.
+	Close() error                       // Closes the client session and its underlying connection.
+	RemoteAddr() string                 // Returns the remote address of the client.
+}
+
+// ClientSessionManager defines the contract for managing active operator client sessions.
+type ClientSessionManager interface {
+	Register(conn *websocket.Conn) (sessionID string, err error)  // Called when a new client session is established.
+	Unregister(sessionID string) error                            // Called when a client session ends (disconnects or error).
+	DispatchRequest(sessionID string, req ClientRequest)          // Handles an incoming ClientRequest from a specific client session.
+	SendToClient(sessionID string, response ServerResponse) error // Allows server to send a ServerResponse to a specific client session
+	Broadcast(response ServerResponse)                            // Sends a message to all currently active/registered client sessions.
+}
+
+// TODO this will replace the listener manager in pkg listener
+// This one adds an extra dimension - connection client <-> server <-> agent
+// TODO Once this is fully implemented, transition from old one, and remove it
+
+// ListenerManager defines operations for managing listeners.
+type ListenerManager interface {
+	CreateListener(ctx context.Context, req CreateListenerPayload, operatorSessionID string) (ServerResponse, error)
+	StopListener(ctx context.Context, req StopListenerPayload, operatorSessionID string) (ServerResponse, error)
+	ListListeners(ctx context.Context, operatorSessionID string) (ServerResponse, error)
+	Shutdown(ctx context.Context) error
+}
+
+// TaskManager accepts an agent tasking request from client and adds it to the TaskStore
+// and return an acknowledgment (typically StatusPending) to the operator.
+// Further: if agent is WS(S) -> push task immediately
+
+type TaskManager interface {
+	// QueueAgentTask takes a request from an operator and queues it for the specified agent.
+	QueueAgentTask(ctx context.Context, req ClientRequest, operatorSessionID string) (ServerResponse, error)
+
+	// ProcessAgentResult takes a completed task result from an agent and forwards the result to the operator.
+	ProcessAgentResult(actualResult models.AgentTaskResult) error
+
+	// TODO Further interactions, like handling task results and notifying operators, will be added later.
+}
+
+// AgentStateManager defines operations for managing known agent state from the API layer.
+// Note: This is the public interface for the API, not the internal manager itself.
+type AgentStateManager interface {
+	// ListAgents returns a summary of all known agents.
+	ListAgents(ctx context.Context, operatorSessionID string) (ServerResponse, error)
+
+	// GetAgentDetails returns detailed information for a single agent.
+	GetAgentDetails(ctx context.Context, agentID string, operatorSessionID string) (ServerResponse, error)
+
+	// InitiateHop signals an agent to HOP, allowing for stateful reporting
+	InitiateHop(agentID, taskID, listenerID string, cancelFunc context.CancelFunc)
+
+	// ClearHopState removes the pending hop state from an agent following success/failure
+	ClearHopState(agentID string)
+}
