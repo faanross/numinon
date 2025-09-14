@@ -9,6 +9,7 @@ import (
 	"numinon_shadow/internal/models"
 	"numinon_shadow/internal/orchestration"
 	"numinon_shadow/internal/taskmanager"
+	"strings"
 	"sync"
 )
 
@@ -45,9 +46,9 @@ func (b *Broker) mapActionToCommand(action clientapi.ActionType) (string, error)
 // 4. Handle protocol-specific task delivery (immediate for WS, queued for HTTP)
 type Broker struct {
 	// Core dependencies
-	taskStore     taskmanager.TaskManager        // The actual task storage
-	orchestrators *orchestration.Registry        // For task preparation/validation
-	clientMgr     clientapi.ClientSessionManager // To send results back to operators
+	taskStore     taskmanager.ObservableTaskManager // Observer wraps taskmanager.TaskManger to give it notification abilities
+	orchestrators *orchestration.Registry           // For task preparation/validation
+	clientMgr     clientapi.ClientSessionManager    // To send results back to operators
 
 	// Tracking mappings
 	mu         sync.RWMutex
@@ -58,16 +59,22 @@ type Broker struct {
 
 // NewBroker creates a new task broker with the necessary dependencies.
 func NewBroker(
-	taskStore taskmanager.TaskManager,
+	taskStore taskmanager.ObservableTaskManager,
 	orchestrators *orchestration.Registry,
 	clientMgr clientapi.ClientSessionManager,
 ) *Broker {
-	return &Broker{
+	broker := &Broker{
 		taskStore:     taskStore,
 		orchestrators: orchestrators,
 		clientMgr:     clientMgr,
 		taskOwners:    make(map[string]string),
 	}
+
+	// Subscribe to task events
+	taskStore.Subscribe(broker)
+	log.Println("[TASK BROKER] Subscribed to task store events")
+
+	return broker
 }
 
 // QueueAgentTask implements clientapi.TaskBroker interface.
@@ -306,13 +313,27 @@ func (b *Broker) QueueAgentTask(ctx context.Context, req clientapi.ClientRequest
 // ProcessAgentResult implements clientapi.TaskBroker interface.
 // This is called when an agent returns a task result.
 func (b *Broker) ProcessAgentResult(result models.AgentTaskResult) error {
-
 	log.Printf("[TASK BROKER] Processing result for task %s", result.TaskID)
 
-	// TODO: Implementation will:
-	// 1. Look up which operator created this task
-	// 2. Format the result for operator consumption
-	// 3. Send result to operator via clientMgr
+	// The actual result storage and notification happens through the observer pattern
+	// This method is here for any additional processing we might need
+
+	// Verify the task exists and belongs to a known operator
+	b.mu.RLock()
+	operatorID, exists := b.taskOwners[result.TaskID]
+	b.mu.RUnlock()
+
+	if !exists {
+		// This might be a task created before the broker was initialized
+		// or a direct task not created through an operator
+		log.Printf("[TASK BROKER] No operator tracking for task %s (might be a direct task)", result.TaskID)
+		return nil // Not an error, just not operator-initiated
+	}
+
+	log.Printf("[TASK BROKER] Task %s belongs to operator %s", result.TaskID, operatorID)
+
+	// The actual notification will happen through OnTaskCompleted when
+	// the task store marks the task as complete
 
 	return nil
 }
@@ -328,4 +349,95 @@ func (b *Broker) GetTaskOwner(taskID string) (string, error) {
 	}
 
 	return operatorID, nil
+}
+
+// OnTaskCompleted handles successful task completion.
+// This is where we route results back to operators.
+func (b *Broker) OnTaskCompleted(task *taskmanager.Task) {
+	log.Printf("[TASK BROKER] Task %s completed for agent %s", task.ID, task.AgentID)
+
+	// Look up which operator created this task
+	b.mu.RLock()
+	operatorID, exists := b.taskOwners[task.ID]
+	b.mu.RUnlock()
+
+	if !exists {
+		log.Printf("[TASK BROKER] Warning: No operator found for completed task %s", task.ID)
+		return
+	}
+
+	// Parse the raw result to get status info
+	var agentResult models.AgentTaskResult
+	if err := json.Unmarshal(task.Result, &agentResult); err != nil {
+		log.Printf("[TASK BROKER] Failed to parse result for task %s: %v", task.ID, err)
+		return
+	}
+
+	// Create operator-friendly result notification
+	resultPayload := clientapi.TaskResultEventPayload{
+		AgentID:        task.AgentID,
+		TaskID:         task.ID,
+		CommandType:    task.Command,
+		ResultData:     task.Result, // Raw result data
+		CommandSuccess: strings.Contains(agentResult.Status, "success"),
+		ErrorMsg:       agentResult.Error,
+	}
+
+	payloadBytes, _ := json.Marshal(resultPayload)
+
+	// Send to operator via client manager
+	response := clientapi.ServerResponse{
+		Status:   clientapi.StatusUpdate,
+		DataType: clientapi.DataTypeCommandResult,
+		Payload:  payloadBytes,
+	}
+
+	if err := b.clientMgr.SendToClient(operatorID, response); err != nil {
+		log.Printf("[TASK BROKER] Failed to send result to operator %s: %v", operatorID, err)
+	} else {
+		log.Printf("[TASK BROKER] Result for task %s sent to operator %s", task.ID, operatorID)
+	}
+}
+
+// OnTaskFailed handles task failure.
+func (b *Broker) OnTaskFailed(task *taskmanager.Task, errorMsg string) {
+	log.Printf("[TASK BROKER] Task %s failed: %s", task.ID, errorMsg)
+
+	// Look up operator
+	b.mu.RLock()
+	operatorID, exists := b.taskOwners[task.ID]
+	b.mu.RUnlock()
+
+	if !exists {
+		log.Printf("[TASK BROKER] Warning: No operator found for failed task %s", task.ID)
+		return
+	}
+
+	// Create failure notification
+	resultPayload := clientapi.TaskResultEventPayload{
+		AgentID:        task.AgentID,
+		TaskID:         task.ID,
+		CommandType:    task.Command,
+		CommandSuccess: false,
+		ErrorMsg:       errorMsg,
+	}
+
+	payloadBytes, _ := json.Marshal(resultPayload)
+
+	response := clientapi.ServerResponse{
+		Status:   clientapi.StatusUpdate,
+		DataType: clientapi.DataTypeCommandResult,
+		Payload:  payloadBytes,
+	}
+
+	if err := b.clientMgr.SendToClient(operatorID, response); err != nil {
+		log.Printf("[TASK BROKER] Failed to send failure notification to operator %s: %v", operatorID, err)
+	}
+}
+
+// OnTaskDispatched handles task dispatch notification.
+func (b *Broker) OnTaskDispatched(task *taskmanager.Task) {
+	log.Printf("[TASK BROKER] Task %s dispatched to agent %s", task.ID, task.AgentID)
+	// For now, we just log.
+	// TODO Could send a status update to operator if desired.
 }

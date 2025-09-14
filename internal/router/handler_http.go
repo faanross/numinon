@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"numinon_shadow/internal/clientapi"
 	"numinon_shadow/internal/models"
 	"numinon_shadow/internal/taskmanager"
 	"numinon_shadow/internal/tracker"
@@ -12,6 +13,9 @@ import (
 
 // AgentTracker is our global tracker reference (set during initialization)
 var AgentTracker *tracker.Tracker
+
+// TaskBroker is our global task broker reference
+var TaskBroker clientapi.TaskBroker
 
 // CheckinHandler processes requests from clients checking in for tasks
 func CheckinHandler(w http.ResponseWriter, r *http.Request) {
@@ -162,6 +166,15 @@ func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("|❗ERR RESULT| Failed to store result for task %s: %v", task.ID, err)
 		http.Error(w, "Failed to process result", http.StatusInternalServerError)
 		return
+	}
+
+	// Notify task broker if it exists
+	// TODO need to add TaskBroker as a global or pass it through context
+	if TaskBroker != nil {
+		if err := TaskBroker.ProcessAgentResult(result); err != nil {
+			log.Printf("|⚠️ RESULT| Failed to notify task broker: %v", err)
+			// Don't fail the request - broker notification is not critical
+		}
 	}
 
 	// Use orchestrator to process command-specific logic

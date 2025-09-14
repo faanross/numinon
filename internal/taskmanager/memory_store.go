@@ -3,6 +3,7 @@ package taskmanager
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
@@ -13,13 +14,17 @@ type MemoryTaskStore struct {
 	mu    sync.RWMutex
 	tasks map[string]*Task
 	rng   *rand.Rand
+
+	observersMu sync.RWMutex
+	observers   []TaskObserver // List of components watching for task changes
 }
 
 // NewMemoryTaskStore creates a new in-memory task store
 func NewMemoryTaskStore() *MemoryTaskStore {
 	return &MemoryTaskStore{
-		tasks: make(map[string]*Task),
-		rng:   rand.New(rand.NewSource(time.Now().UnixNano())),
+		tasks:     make(map[string]*Task),
+		rng:       rand.New(rand.NewSource(time.Now().UnixNano())),
+		observers: []TaskObserver{},
 	}
 }
 
@@ -82,6 +87,10 @@ func (m *MemoryTaskStore) MarkDispatched(taskID string) error {
 	}
 
 	task.MarkDispatched()
+
+	// Notify Observer
+	go m.notifyObservers("dispatched", task, "")
+	
 	return nil
 }
 
@@ -101,6 +110,10 @@ func (m *MemoryTaskStore) StoreResult(taskID string, result json.RawMessage) err
 	}
 
 	task.MarkCompleted(result)
+
+	// Notify Observer
+	go m.notifyObservers("completed", task, "")
+
 	return nil
 }
 
@@ -120,6 +133,10 @@ func (m *MemoryTaskStore) MarkFailed(taskID string, errorMsg string) error {
 	}
 
 	task.MarkFailed(errorMsg)
+
+	// Notify Observer
+	go m.notifyObservers("failed", task, errorMsg)
+
 	return nil
 }
 
@@ -198,4 +215,49 @@ func (m *MemoryTaskStore) Stats() map[string]int {
 	}
 
 	return stats
+}
+
+// Subscribe adds an observer to be notified of task events.
+func (m *MemoryTaskStore) Subscribe(observer TaskObserver) {
+	m.observersMu.Lock()
+	defer m.observersMu.Unlock()
+
+	m.observers = append(m.observers, observer)
+	log.Printf("[TASK STORE] Observer subscribed. Total observers: %d", len(m.observers))
+}
+
+// Unsubscribe removes an observer.
+func (m *MemoryTaskStore) Unsubscribe(observer TaskObserver) {
+	m.observersMu.Lock()
+	defer m.observersMu.Unlock()
+
+	for i, obs := range m.observers {
+		if obs == observer {
+			// Remove from slice
+			m.observers = append(m.observers[:i], m.observers[i+1:]...)
+			log.Printf("[TASK STORE] Observer unsubscribed. Total observers: %d", len(m.observers))
+			return
+		}
+	}
+}
+
+// notifyObservers sends notifications to all subscribed observers.
+// This is called internally when task state changes.
+func (m *MemoryTaskStore) notifyObservers(event string, task *Task, errorMsg string) {
+	m.observersMu.RLock()
+	observers := make([]TaskObserver, len(m.observers))
+	copy(observers, m.observers)
+	m.observersMu.RUnlock()
+
+	// Notify outside of lock to prevent deadlock
+	for _, observer := range observers {
+		switch event {
+		case "completed":
+			observer.OnTaskCompleted(task)
+		case "failed":
+			observer.OnTaskFailed(task, errorMsg)
+		case "dispatched":
+			observer.OnTaskDispatched(task)
+		}
+	}
 }

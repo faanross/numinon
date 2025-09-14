@@ -50,9 +50,14 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 	listenerMgr := listener.NewManager(router, agentTracker)
 
 	// Register all orchestrators
+	// Create standard orchestrators (these don't need special infrastructure)
 	downloadOrch := orchestration.NewDownloadOrchestrator("./downloads")
 	uploadOrch := orchestration.NewUploadOrchestrator()
-	// ... register all orchestrators ...
+	runCmdOrch := orchestration.NewRunCmdOrchestrator()
+	shellcodeOrch := orchestration.NewShellcodeOrchestrator()
+	enumerateOrch := orchestration.NewEnumerationOrchestrator()
+	morphOrch := orchestration.NewMorphOrchestrator()
+	hopOrch := orchestration.NewHopOrchestrator(listenerMgr, agentTracker)
 
 	// Create operator-layer wrappers
 	listenerAPI := listenermanager.NewOperatorListenerManager(listenerMgr)

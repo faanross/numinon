@@ -72,3 +72,29 @@ func (r *ResultProcessorRegistry) Process(task *Task) error {
 	}
 	return processor.ProcessResult(task, task.Result)
 }
+
+// TaskObserver receives notifications about task state changes.
+// This is done to implement Observer, which allows Operator to be notified when
+// Server receives results back from Agent
+type TaskObserver interface {
+	// OnTaskCompleted is called when a task completes successfully
+	OnTaskCompleted(task *Task)
+
+	// OnTaskFailed is called when a task fails
+	OnTaskFailed(task *Task, error string)
+
+	// OnTaskDispatched is called when a task is sent to an agent
+	OnTaskDispatched(task *Task)
+}
+
+// ObservableTaskManager extends TaskManager with observer capabilities.
+// This allows other components to subscribe to task events.
+type ObservableTaskManager interface {
+	TaskManager
+
+	// Subscribe adds an observer that will be notified of task events
+	Subscribe(observer TaskObserver)
+
+	// Unsubscribe removes an observer
+	Unsubscribe(observer TaskObserver)
+}

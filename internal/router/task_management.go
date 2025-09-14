@@ -4,6 +4,7 @@ import (
 	"log"
 	"numinon_shadow/internal/listener"
 	"numinon_shadow/internal/orchestration"
+	"numinon_shadow/internal/server"
 	"numinon_shadow/internal/taskmanager"
 	"numinon_shadow/internal/tracker"
 )
@@ -36,9 +37,6 @@ func registerAllOrchestrators(listenerMgr *listener.Manager, agentTracker *track
 	shellcodeOrch := orchestration.NewShellcodeOrchestrator()
 	enumerateOrch := orchestration.NewEnumerationOrchestrator()
 	morphOrch := orchestration.NewMorphOrchestrator()
-
-	// Create HOP orchestrator with whatever support is available
-	// The HOP orchestrator should handle nil gracefully
 	hopOrch := orchestration.NewHopOrchestrator(listenerMgr, agentTracker)
 
 	// Register all orchestrators
@@ -49,4 +47,15 @@ func registerAllOrchestrators(listenerMgr *listener.Manager, agentTracker *track
 	Orchestrators.Register("enumerate", enumerateOrch)
 	Orchestrators.Register("morph", morphOrch)
 	Orchestrators.Register("hop", hopOrch)
+}
+
+// InitializeWithOperatorSupport sets up the full system with operator support
+func InitializeWithOperatorSupport(deps *server.Dependencies) {
+	// Set global references
+	TaskManager = deps.TaskStore
+	Orchestrators = deps.Orchestrators
+	AgentTracker = deps.AgentTracker
+	TaskBroker = deps.TaskBroker // ADD THIS
+
+	log.Println("|📋 TASK MGR| Task management initialized with full operator support")
 }
