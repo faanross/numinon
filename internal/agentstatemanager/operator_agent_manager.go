@@ -11,7 +11,7 @@ import (
 )
 
 // OperatorAgentManager implements clientapi.AgentStateManager.
-// It provides operator-friendly access to agent information.
+// It provides operator-layer access to agent information.
 //
 // This is like the "agent status dashboard" for operators:
 // - Shows which agents are connected

@@ -12,13 +12,15 @@ import (
 
 // OperatorListenerManager implements clientapi.ListenerManager.
 // It wraps the existing listener.Manager to provide operator-friendly functionality.
+// In other words, without this wrapper listener.Manager is confined to server layer only
+// This extends it and makes it available to our operator layer
 //
-// Think of this as a "customer service representative" for the listener system:
-// - It translates operator requests into system actions
-// - It formats system responses for operator consumption
+// - It translates operator requests into server actions
+// - It formats agent/server responses for operator consumption
 // - It adds operator-specific features (like session tracking)
 type OperatorListenerManager struct {
-	core *listener.Manager // The actual listener manager
+	core *listener.Manager // The actual listener manager from pkg listener
+	// reminder: my wrapping it in this the struct we can access all those methods from our local methods here
 }
 
 // NewOperatorListenerManager creates a new operator-friendly wrapper.
@@ -33,7 +35,7 @@ func (m *OperatorListenerManager) CreateListener(ctx context.Context, req client
 	log.Printf("[LISTENER API] Operator %s requesting new listener: %s on %s",
 		operatorSessionID, req.Protocol, req.Address)
 
-	// Step 1: Parse the address (operators provide "0.0.0.0:8080", we need IP and port separate)
+	// Step 1: Parse the address
 	parts := strings.Split(req.Address, ":")
 	if len(parts) != 2 {
 		return clientapi.ServerResponse{
@@ -54,7 +56,7 @@ func (m *OperatorListenerManager) CreateListener(ctx context.Context, req client
 		}, err
 	}
 
-	// Step 3: Create the listener using the core manager
+	// Step 3: Create the listener using the core manager from pkg listener
 	listenerID, err := m.core.CreateListener(listenerType, ip, port)
 	if err != nil {
 		return clientapi.ServerResponse{
@@ -88,7 +90,7 @@ func (m *OperatorListenerManager) CreateListener(ctx context.Context, req client
 func (m *OperatorListenerManager) ListListeners(ctx context.Context, operatorSessionID string) (clientapi.ServerResponse, error) {
 	log.Printf("[LISTENER API] Operator %s requesting listener list", operatorSessionID)
 
-	// For now, we'll return a simple list
+	// For now return a simple list
 	// In a full implementation, we'd iterate through m.core's listeners
 
 	// TODO: Add method to listener.Manager to get all listeners
