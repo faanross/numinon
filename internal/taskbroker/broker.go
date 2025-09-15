@@ -9,6 +9,7 @@ import (
 	"numinon_shadow/internal/models"
 	"numinon_shadow/internal/orchestration"
 	"numinon_shadow/internal/taskmanager"
+	"numinon_shadow/internal/tracker"
 	"strings"
 	"sync"
 )
@@ -54,7 +55,9 @@ type Broker struct {
 	mu         sync.RWMutex
 	taskOwners map[string]string // taskID -> operatorSessionID
 
-	// TODO: Add agent tracker to determine if agent is WS-connected for immediate push
+	// Pusher allows for immediate push of tasks to WS-agents
+	wsPusher     *WebSocketTaskPusher // For immediate WS delivery
+	agentTracker *tracker.Tracker     // To check connection type
 }
 
 // NewBroker creates a new task broker with the necessary dependencies.
@@ -62,11 +65,15 @@ func NewBroker(
 	taskStore taskmanager.ObservableTaskManager,
 	orchestrators *orchestration.Registry,
 	clientMgr clientapi.ClientSessionManager,
+	wsPusher *WebSocketTaskPusher,
+	agentTracker *tracker.Tracker,
 ) *Broker {
 	broker := &Broker{
 		taskStore:     taskStore,
 		orchestrators: orchestrators,
 		clientMgr:     clientMgr,
+		wsPusher:      wsPusher,
+		agentTracker:  agentTracker,
 		taskOwners:    make(map[string]string),
 	}
 
@@ -289,6 +296,28 @@ func (b *Broker) QueueAgentTask(ctx context.Context, req clientapi.ClientRequest
 	log.Printf("[TASK BROKER] Created task %s for agent %s on behalf of operator %s",
 		task.ID, agentID, operatorSessionID)
 
+	//  Attempt immediate push for WebSocket agents
+	if b.wsPusher != nil && b.agentTracker != nil {
+		// Check if agent is WebSocket-connected
+		agentInfo, exists := b.agentTracker.GetAgentInfo(agentID)
+		if exists && agentInfo.ConnectionType == tracker.TypeWebSocket {
+			// Agent is WebSocket-connected, try immediate push
+			if err := b.wsPusher.PushTask(agentID, task); err != nil {
+				log.Printf("[TASK BROKER] Failed to push task immediately: %v. Task queued for next check-in.", err)
+				// Not a fatal error - task is queued and agent will get it eventually
+			} else {
+				// Mark as dispatched since we pushed it
+				if err := b.taskStore.MarkDispatched(task.ID); err != nil {
+					log.Printf("[TASK BROKER] Warning: Failed to mark pushed task as dispatched: %v", err)
+				}
+				log.Printf("[TASK BROKER] Task %s pushed immediately to WebSocket agent %s",
+					task.ID, agentID)
+			}
+		} else {
+			log.Printf("[TASK BROKER] Agent %s is not WebSocket-connected. Task queued for next check-in.", agentID)
+		}
+	}
+	
 	// Step 5: Return acknowledgment to operator
 	confirmationPayload := clientapi.TaskQueuedConfirmationPayload{
 		AgentID: agentID,

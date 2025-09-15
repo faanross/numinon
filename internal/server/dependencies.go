@@ -26,6 +26,9 @@ type Dependencies struct {
 	AgentTracker  *tracker.Tracker        // Tracks agent connections
 	ListenerMgr   *listener.Manager       // Manages network listeners
 
+	// ADD THIS:
+	WSPusher *taskbroker.WebSocketTaskPusher
+
 	// Operator Layer
 	ClientSessions clientapi.ClientSessionManager // Manages operator WebSocket connections
 	TaskBroker     clientapi.TaskBroker           // Bridges operators to tasks (TaskStore)
@@ -39,6 +42,7 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 	// Create core infrastructure
 	taskStore := taskmanager.NewMemoryTaskStore()
 	orchestrators := orchestration.NewRegistry()
+	wsPusher := taskbroker.NewWebSocketTaskPusher()
 
 	// If no tracker provided, create one
 	agentTracker := existingTracker
@@ -68,7 +72,13 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 	clientSessions := clientmanager.New(listenerAPI, nil, agentStateAPI) // nil for taskBroker temporarily
 
 	// Create task broker with all its dependencies
-	taskBroker := taskbroker.NewBroker(taskStore, orchestrators, clientSessions)
+	taskBroker := taskbroker.NewBroker(
+		taskStore,
+		orchestrators,
+		clientSessions,
+		wsPusher,
+		agentTracker,
+	)
 
 	// Now update client sessions with the task broker
 	// (We'll need to add a SetTaskBroker method to clientmanager)
@@ -80,6 +90,7 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 		ListenerMgr:    listenerMgr,
 		ClientSessions: clientSessions,
 		TaskBroker:     taskBroker,
+		WSPusher:       wsPusher,
 		ListenerAPI:    listenerAPI,
 		AgentStateAPI:  agentStateAPI,
 	}

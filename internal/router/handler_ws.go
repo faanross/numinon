@@ -8,13 +8,12 @@ import (
 	"net/http"
 	"numinon_shadow/internal/agent/config"
 	"numinon_shadow/internal/models"
+	"numinon_shadow/internal/taskbroker"
 	"numinon_shadow/internal/tracker"
-	"time"
 )
 
-var autoPushDelay = time.Second * 6
-
-var counter = 0
+// WSPusher allows tasks to be pushed immediately from broker (operator layer) to intended agent
+var WSPusher *taskbroker.WebSocketTaskPusher
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -35,6 +34,12 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	if agentID == "" {
 		log.Println("Agent connected without an ID")
 		return
+	}
+
+	// Register with task pusher
+	if WSPusher != nil {
+		WSPusher.RegisterConnection(agentID, conn)
+		defer WSPusher.UnregisterConnection(agentID) // Clean up on disconnect
 	}
 
 	defer func() {
@@ -70,117 +75,6 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("| 🧦 WEBSOCKET AGENT CONNECTED | ID: %s | Protocol: %s |\n", agentID, agentProtocol)
-
-	// (4) COMMAND ISSUANCE SIMULATOR (delete this later)
-
-	// Start Tasking Goroutine
-	// This goroutine is responsible for proactively pushing tasks to the agent.
-	go func() {
-		for {
-			// 1. Wait for X seconds before attempting to issue a new task.
-			time.Sleep(autoPushDelay)
-
-			var response models.ServerTaskResponse
-
-			// For now, just assume there is always a task
-			// We will use a counter to go through each command 1-by-1
-
-			response.TaskAvailable = true
-			var command string
-			var commandArgs json.RawMessage
-
-			switch counter {
-			case 0:
-				command = "download"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnDownloadStruct(w)
-			case 1:
-				command = "upload"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnUploadStruct(w)
-			case 2:
-				command = "run_cmd"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnRunCmdStruct(w)
-			case 3:
-				command = "enumerate"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnEnumerateStruct(w)
-			case 4:
-				command = "enumerate"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnEnumerateStruct(w)
-			case 5:
-				command = "enumerate"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnEnumerateStruct(w)
-			case 6:
-				command = "enumerate"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnEnumerateStruct(w)
-			case 7:
-				command = "hop"
-				log.Printf("WS Handler Automated Command | Iteration: %d | Command: %s\n", counter, command)
-				commandArgs = returnHopStruct(w)
-
-			default:
-				return
-			}
-
-			// increment so after sleep we call next command
-			counter++
-
-			// Create task in task manager
-			task, err := TaskManager.CreateTask(agentID, command, commandArgs)
-			if err != nil {
-				log.Printf("|❗ERR TASK| Failed to create task: %v", err)
-				http.Error(w, "Failed to create task", http.StatusInternalServerError)
-				return
-			}
-
-			// Use orchestrator to prepare the task (sets metadata, validates args, etc.)
-			if err := Orchestrators.PrepareTask(task); err != nil {
-				log.Printf("|❗ERR TASK| Failed to prepare task: %v", err)
-				http.Error(w, "Failed to prepare task", http.StatusInternalServerError)
-				return
-			}
-
-			// Update task with any metadata set by the orchestrator
-			if err := TaskManager.UpdateTask(task); err != nil {
-				log.Printf("|❗WARN TASK| Failed to update task after preparation: %v", err)
-				// Continue anyway - task was created
-			}
-
-			// Populate response with task details
-			response.TaskID = task.ID
-			response.Command = task.Command
-			response.Data = task.Arguments
-
-			// Mark task as dispatched
-			if err := TaskManager.MarkDispatched(task.ID); err != nil {
-				log.Printf("|❗WARN TASK| Failed to mark task as dispatched: %v", err)
-				// Continue anyway - task was created and sent
-			}
-
-			log.Printf("|📌 TASK ISSUED| -> Sent command '%s' with TaskID '%s' to Agent %s (WebSocket)\n",
-				response.Command, response.TaskID, agentID)
-
-			// 3. Marshal the response struct to JSON.
-			jsonResponse, err := json.Marshal(response)
-			if err != nil {
-				log.Printf("Error marshalling task for Agent %s: %v", agentID, err)
-				continue // Skip this iteration on error
-			}
-
-			// 4. Write the JSON message to the WebSocket connection.
-			if err := conn.WriteMessage(websocket.TextMessage, jsonResponse); err != nil {
-				log.Printf("Error sending task to Agent %s: %v", agentID, err)
-				// If we can't write, the connection is likely broken. Exit the goroutine.
-				return
-			}
-		}
-	}()
-	// --------------------------------------------------------------------------
 
 	// (5) READING LOOP - Reading messages FROM the agent (e.g., task results)
 	for {

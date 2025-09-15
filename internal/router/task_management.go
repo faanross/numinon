@@ -55,7 +55,8 @@ func InitializeWithOperatorSupport(deps *server.Dependencies) {
 	TaskManager = deps.TaskStore
 	Orchestrators = deps.Orchestrators
 	AgentTracker = deps.AgentTracker
-	TaskBroker = deps.TaskBroker // ADD THIS
+	TaskBroker = deps.TaskBroker
+	WSPusher = deps.WSPusher
 
 	log.Println("|📋 TASK MGR| Task management initialized with full operator support")
 }
