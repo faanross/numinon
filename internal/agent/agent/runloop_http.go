@@ -84,7 +84,8 @@ func (a *Agent) runHttpLoop() error {
 			// call executeTask if we do have a task
 			if taskResp.TaskAvailable {
 				log.Println("|AGENT LOOP HTTP|-> Task is available.")
-				log.Printf("|AGENT LOOP HTTP|-> Task received (ID: %s, Cmd: %s). Executing...", taskResp.TaskID, taskResp.Command)
+				log.Printf("|AGENT LOOP HTTP|-> Task received (ID: %s, Cmd: %s). Executing...",
+					taskResp.TaskID, taskResp.Command)
 				a.executeTask(taskResp) // Execute the task (which will send results internally)
 			}
 

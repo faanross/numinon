@@ -13,8 +13,6 @@ func (a *Agent) executeTask(task models.ServerTaskResponse) {
 
 	var result models.AgentTaskResult
 
-	// NEW CODE USING MAP STARTS
-
 	orchestrator, found := a.commandOrchestrators[task.Command]
 
 	if found {
@@ -27,8 +25,6 @@ func (a *Agent) executeTask(task models.ServerTaskResponse) {
 			Error:  fmt.Sprintf("Agent does not recognize command: '%s'", task.Command),
 		}
 	}
-
-	// NEW CODE USING MAP ENDS
 
 	// Now marshall the result before sending it back using SendResult
 	resultBytes, err := json.Marshal(result)
