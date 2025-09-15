@@ -63,6 +63,15 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 	morphOrch := orchestration.NewMorphOrchestrator()
 	hopOrch := orchestration.NewHopOrchestrator(listenerMgr, agentTracker)
 
+	// Register with the orchestrators registry:
+	orchestrators.Register("download", downloadOrch)
+	orchestrators.Register("upload", uploadOrch)
+	orchestrators.Register("run_cmd", runCmdOrch)
+	orchestrators.Register("shellcode", shellcodeOrch)
+	orchestrators.Register("enumerate", enumerateOrch)
+	orchestrators.Register("morph", morphOrch)
+	orchestrators.Register("hop", hopOrch)
+
 	// Create operator-layer wrappers
 	listenerAPI := listenermanager.NewOperatorListenerManager(listenerMgr)
 	agentStateAPI := agentstatemanager.NewOperatorAgentManager(agentTracker)

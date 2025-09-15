@@ -38,12 +38,9 @@ func (m *OperatorAgentManager) ListAgents(ctx context.Context, operatorSessionID
 
 	// Convert to operator-friendly format
 	var agentInfos []clientapi.AgentInfo
+
 	for _, agent := range agents {
 		// Determine status string
-		statusStr := string(agent.State)
-		if agent.IsHopping {
-			statusStr = "hopping"
-		}
 
 		info := clientapi.AgentInfo{
 			AgentID:           agent.ID,

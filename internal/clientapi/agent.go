@@ -12,6 +12,7 @@ type AgentInfo struct {
 	LastSeen          string `json:"last_seen"`
 	SourceIP          string `json:"source_ip"`                     // IP address from which the agent connects
 	CurrentListenerID string `json:"current_listener_id,omitempty"` // Which listener it's talking to
+	Status            string `json:"status,omitempty"`              // TODO implement status reporting to Client, currently missing
 	OS                string `json:"os,omitempty"`                  // Operating System (e.g., "windows", "linux")
 	Arch              string `json:"arch,omitempty"`                // Architecture (e.g., "amd64", "arm64")
 	Hostname          string `json:"hostname,omitempty"`
