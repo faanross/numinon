@@ -34,14 +34,31 @@ func (m *OperatorAgentManager) ListAgents(ctx context.Context, operatorSessionID
 	log.Printf("[AGENT API] Operator %s requesting agent list", operatorSessionID)
 
 	// Get all agents from tracker
-	// TODO: Add method to tracker to get all agents
-	// For now, return empty list as placeholder
+	agents := m.tracker.GetAllAgents()
 
-	agentList := clientapi.AgentListPayload{
-		Agents: []clientapi.AgentInfo{},
+	// Convert to operator-friendly format
+	var agentInfos []clientapi.AgentInfo
+	for _, agent := range agents {
+		// Determine status string
+		statusStr := string(agent.State)
+		if agent.IsHopping {
+			statusStr = "hopping"
+		}
+
+		info := clientapi.AgentInfo{
+			AgentID:           agent.ID,
+			FirstSeen:         agent.ConnectedAt.Format("2006-01-02 15:04:05"),
+			LastSeen:          agent.LastSeenAt.Format("2006-01-02 15:04:05"),
+			SourceIP:          agent.RemoteAddr,
+			CurrentListenerID: agent.ListenerID,
+			// Add a Status field to AgentInfo if needed
+		}
+		agentInfos = append(agentInfos, info)
 	}
 
-	// In full implementation, iterate through tracker's agents and convert to operator format
+	agentList := clientapi.AgentListPayload{
+		Agents: agentInfos,
+	}
 
 	payloadBytes, _ := json.Marshal(agentList)
 

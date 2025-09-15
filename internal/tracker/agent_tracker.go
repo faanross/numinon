@@ -339,3 +339,18 @@ func (t *Tracker) GetStats() map[string]interface{} {
 
 	return stats
 }
+
+// GetAllAgents returns information about all known agents
+func (t *Tracker) GetAllAgents() []*AgentInfo {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	agents := make([]*AgentInfo, 0, len(t.agents))
+	for _, agent := range t.agents {
+		// Create a copy to prevent external modification
+		agentCopy := *agent
+		agents = append(agents, &agentCopy)
+	}
+
+	return agents
+}

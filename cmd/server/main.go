@@ -17,7 +17,6 @@ func main() {
 	log.Println("|👽 SERVER|-> Starting Numinon Server...")
 
 	// (1) SETUP SIGNALS AND CHANNELS
-	stopChan := make(chan struct{})
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 

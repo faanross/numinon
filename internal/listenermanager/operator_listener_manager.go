@@ -86,17 +86,29 @@ func (m *OperatorListenerManager) CreateListener(ctx context.Context, req client
 	}, nil
 }
 
-// ListListeners returns all active listeners in operator-friendly format.
 func (m *OperatorListenerManager) ListListeners(ctx context.Context, operatorSessionID string) (clientapi.ServerResponse, error) {
 	log.Printf("[LISTENER API] Operator %s requesting listener list", operatorSessionID)
 
-	// For now return a simple list
-	// In a full implementation, we'd iterate through m.core's listeners
+	// Get all listeners from core manager
+	listeners := m.core.GetAllListeners()
 
-	// TODO: Add method to listener.Manager to get all listeners
-	// For now, return empty list
+	// Convert to operator-friendly format
+	var listenerPayloads []clientapi.ListenerStatusPayload
+	for _, l := range listeners {
+		status := "RUNNING" // All returned listeners are running
+
+		payload := clientapi.ListenerStatusPayload{
+			ListenerID: l.ID,
+			Protocol:   string(l.Type),
+			Address:    l.Address,
+			Status:     status,
+			Message:    fmt.Sprintf("%d agents connected", l.AgentCount),
+		}
+		listenerPayloads = append(listenerPayloads, payload)
+	}
+
 	listPayload := clientapi.ListenerListPayload{
-		Listeners: []clientapi.ListenerStatusPayload{},
+		Listeners: listenerPayloads,
 	}
 
 	payloadBytes, _ := json.Marshal(listPayload)

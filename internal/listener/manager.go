@@ -9,6 +9,15 @@ import (
 	"time"
 )
 
+// ListenerInfo displays important info for operators
+type ListenerInfo struct {
+	ID         string
+	Type       ListenerType
+	Address    string
+	Agents     []string
+	AgentCount int
+}
+
 // Manager handles the lifecycle of multiple listeners
 type Manager struct {
 	mu           sync.RWMutex
@@ -134,4 +143,30 @@ func (m *Manager) StopAll() {
 
 	m.listeners = make(map[string]Listener)
 	log.Println("|🛑 MGR| All listeners stopped")
+}
+
+// GetAllListeners returns information about all active listeners
+func (m *Manager) GetAllListeners() []ListenerInfo {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var listeners []ListenerInfo
+	for id, l := range m.listeners {
+		// Get connected agents for this listener
+		agents := []string{}
+		if m.agentTracker != nil {
+			agents = m.agentTracker.GetListenerAgents(id)
+		}
+
+		info := ListenerInfo{
+			ID:         id,
+			Type:       l.Type(),
+			Address:    l.Addr(),
+			Agents:     agents,
+			AgentCount: len(agents),
+		}
+		listeners = append(listeners, info)
+	}
+
+	return listeners
 }
