@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/faanross/numinon/internal/agent/agent"
+	"github.com/faanross/numinon/internal/agent/config"
 	"log"
-	"numinon_shadow/internal/agent/agent"
-	"numinon_shadow/internal/agent/config"
 	"os"
 	"os/signal"
 	"syscall"

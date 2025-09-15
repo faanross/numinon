@@ -3,7 +3,7 @@ package orchestration
 import (
 	"encoding/json"
 	"fmt"
-	"numinon_shadow/internal/taskmanager"
+	"github.com/faanross/numinon/internal/taskmanager"
 )
 
 // EnumerationOrchestrator handles the Enumeration command lifecycle

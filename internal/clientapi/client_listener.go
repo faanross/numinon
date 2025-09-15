@@ -3,10 +3,10 @@ package clientapi
 import (
 	"errors"
 	"fmt"
+	"github.com/faanross/numinon/internal/listener"
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
-	"numinon_shadow/internal/listener"
 )
 
 // TODO give server it's own YAML config system, move these values there, pass cfg as argument

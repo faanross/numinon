@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/faanross/numinon/internal/models"
 	"golang.org/x/sys/windows"
-	"numinon_shadow/internal/models"
 )
 
 // windowsEnumerate implements the CommandEnumerate interface for Windows.

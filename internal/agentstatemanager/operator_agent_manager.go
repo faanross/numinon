@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 
-	"numinon_shadow/internal/clientapi"
-	"numinon_shadow/internal/tracker"
+	"github.com/faanross/numinon/internal/clientapi"
+	"github.com/faanross/numinon/internal/tracker"
 )
 
 // OperatorAgentManager implements clientapi.AgentStateManager.

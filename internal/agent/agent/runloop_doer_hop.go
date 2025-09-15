@@ -2,9 +2,9 @@ package agent
 
 import (
 	"errors"
+	"github.com/faanross/numinon/internal/agent/comm"
+	"github.com/faanross/numinon/internal/agent/config"
 	"log"
-	"numinon_shadow/internal/agent/comm"
-	"numinon_shadow/internal/agent/config"
 )
 
 // attemptHopSequence tries to perform a protocol hop.

@@ -3,8 +3,8 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/models"
 	"log"
-	"numinon_shadow/internal/models"
 )
 
 // executeTask processes a received task, performs the action, and sends the result.

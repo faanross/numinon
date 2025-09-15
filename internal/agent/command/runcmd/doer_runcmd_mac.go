@@ -4,7 +4,7 @@ package runcmd
 
 import (
 	"fmt"
-	"numinon_shadow/internal/models"
+	"github.com/faanross/numinon/internal/models"
 )
 
 // macRunCmd implements the CommandRunCmd interface for Darwin.

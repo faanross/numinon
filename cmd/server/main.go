@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/faanross/numinon/internal/listener"
+	"github.com/faanross/numinon/internal/router"
+	"github.com/faanross/numinon/internal/tracker"
 	"github.com/go-chi/chi/v5"
 	"log"
-	"numinon_shadow/internal/listener"
-	"numinon_shadow/internal/router"
-	"numinon_shadow/internal/tracker"
 	"os"
 	"os/signal"
 	"syscall"

@@ -2,7 +2,7 @@ package comm
 
 import (
 	"fmt"
-	"numinon_shadow/internal/agent/config"
+	"github.com/faanross/numinon/internal/agent/config"
 )
 
 type Communicator interface {

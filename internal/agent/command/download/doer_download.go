@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/faanross/numinon/internal/models"
 	"log"
-	"numinon_shadow/internal/models"
 	"os"
 )
 

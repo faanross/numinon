@@ -2,7 +2,7 @@
 package main
 
 import (
-	"numinon_shadow/internal/agent/config"
+	"github.com/faanross/numinon/internal/agent/config"
 	"time"
 )
 

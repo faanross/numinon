@@ -3,9 +3,9 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/command/enumerate"
+	"github.com/faanross/numinon/internal/models"
 	"log"
-	"numinon_shadow/internal/agent/command/enumerate"
-	"numinon_shadow/internal/models"
 )
 
 // orchestrateEnumerate is the orchestrator for the enumerate command.

@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/command/download"
+	"github.com/faanross/numinon/internal/models"
 	"log"
-	"numinon_shadow/internal/agent/command/download"
-	"numinon_shadow/internal/models"
 	"strings"
 )
 

@@ -3,10 +3,10 @@ package comm
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/config"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/url"
-	"numinon_shadow/internal/agent/config"
 	"sync"
 	"time"
 )

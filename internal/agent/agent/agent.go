@@ -2,12 +2,12 @@ package agent
 
 import (
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/comm"
+	"github.com/faanross/numinon/internal/agent/config"
+	"github.com/faanross/numinon/internal/models"
 	"log"
 	"math"
 	"math/rand"
-	"numinon_shadow/internal/agent/comm"
-	"numinon_shadow/internal/agent/config"
-	"numinon_shadow/internal/models"
 	"sync"
 	"time"
 )

@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/command/shellcode"
+	"github.com/faanross/numinon/internal/models"
 	"log"
-	"numinon_shadow/internal/agent/command/shellcode"
-	"numinon_shadow/internal/models"
 )
 
 // orchestrateShellcode is the orchestrator for the SHELLCODE command.

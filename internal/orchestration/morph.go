@@ -3,8 +3,8 @@ package orchestration
 import (
 	"encoding/json"
 	"fmt"
-	"numinon_shadow/internal/models"
-	"numinon_shadow/internal/taskmanager"
+	"github.com/faanross/numinon/internal/models"
+	"github.com/faanross/numinon/internal/taskmanager"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func (d *MorphOrchestrator) ValidateArgs(args json.RawMessage) error {
 	if newDelayDuration <= 0 {
 		return fmt.Errorf("BaseSleep update failed, must be a positive duration, current valueinvalid duration format '%s'. Error: %v", *morphArgs.NewDelay, parseErr)
 	}
-	
+
 	newJitter := *morphArgs.NewJitter
 
 	if newJitter < 0.0 || newJitter > 1.0 {

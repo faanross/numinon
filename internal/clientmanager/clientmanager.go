@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/clientapi"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
-	"numinon_shadow/internal/clientapi"
 	"time"
 )
 

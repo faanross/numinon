@@ -2,8 +2,8 @@ package clientapi
 
 import (
 	"context"
+	"github.com/faanross/numinon/internal/models"
 	"github.com/gorilla/websocket"
-	"numinon_shadow/internal/models"
 )
 
 // ClientSession represents an active operator client connection.

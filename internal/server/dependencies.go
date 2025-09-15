@@ -1,16 +1,16 @@
 package server
 
 import (
+	"github.com/faanross/numinon/internal/agentstatemanager"
+	"github.com/faanross/numinon/internal/clientapi"
+	"github.com/faanross/numinon/internal/clientmanager"
+	"github.com/faanross/numinon/internal/listener"
+	"github.com/faanross/numinon/internal/listenermanager"
+	"github.com/faanross/numinon/internal/orchestration"
+	"github.com/faanross/numinon/internal/taskbroker"
+	"github.com/faanross/numinon/internal/taskmanager"
+	"github.com/faanross/numinon/internal/tracker"
 	"net/http"
-	"numinon_shadow/internal/agentstatemanager"
-	"numinon_shadow/internal/clientapi"
-	"numinon_shadow/internal/clientmanager"
-	"numinon_shadow/internal/listener"
-	"numinon_shadow/internal/listenermanager"
-	"numinon_shadow/internal/orchestration"
-	"numinon_shadow/internal/taskbroker"
-	"numinon_shadow/internal/taskmanager"
-	"numinon_shadow/internal/tracker"
 )
 
 // Dependencies holds all the core server components that various parts of the system need.

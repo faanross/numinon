@@ -6,17 +6,17 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/config"
 	"io/ioutil"
 	"log"
-	"numinon_shadow/internal/agent/config"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/faanross/numinon/internal/clientapi"
+	"github.com/faanross/numinon/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"numinon_shadow/internal/clientapi"
-	"numinon_shadow/internal/models"
 )
 
 const (

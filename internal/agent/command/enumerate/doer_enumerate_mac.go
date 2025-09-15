@@ -4,7 +4,7 @@ package enumerate
 
 import (
 	"fmt"
-	"numinon_shadow/internal/models"
+	"github.com/faanross/numinon/internal/models"
 )
 
 // macEnumerate implements the CommandEnumerate interface for Darwin.

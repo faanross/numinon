@@ -3,8 +3,8 @@ package orchestration
 import (
 	"encoding/json"
 	"fmt"
-	"numinon_shadow/internal/models"
-	"numinon_shadow/internal/taskmanager"
+	"github.com/faanross/numinon/internal/models"
+	"github.com/faanross/numinon/internal/taskmanager"
 )
 
 // UploadOrchestrator handles the upload command lifecycle

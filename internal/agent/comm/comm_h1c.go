@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/config"
+	"github.com/faanross/numinon/internal/agent/utils"
+	"github.com/faanross/numinon/internal/models"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"numinon_shadow/internal/agent/config"
-	"numinon_shadow/internal/agent/utils"
-	"numinon_shadow/internal/models"
 	"strings"
 )
 

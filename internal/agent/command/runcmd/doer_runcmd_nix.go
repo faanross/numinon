@@ -4,7 +4,7 @@ package runcmd
 
 import (
 	"fmt"
-	"numinon_shadow/internal/models"
+	"github.com/faanross/numinon/internal/models"
 )
 
 // nixRunCmd implements the CommandRunCmd interface for Linux.

@@ -3,10 +3,10 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/agent/comm"
+	"github.com/faanross/numinon/internal/agent/config"
+	"github.com/faanross/numinon/internal/models"
 	"log"
-	"numinon_shadow/internal/agent/comm"
-	"numinon_shadow/internal/agent/config"
-	"numinon_shadow/internal/models"
 	"time"
 )
 

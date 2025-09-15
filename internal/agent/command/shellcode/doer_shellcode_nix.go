@@ -4,7 +4,7 @@ package shellcode
 
 import (
 	"fmt"
-	"numinon_shadow/internal/models"
+	"github.com/faanross/numinon/internal/models"
 )
 
 // nixShellcode implements the CommandShellcode interface for Linux.

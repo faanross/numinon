@@ -3,7 +3,7 @@ package orchestration
 
 import (
 	"encoding/json"
-	"numinon_shadow/internal/taskmanager"
+	"github.com/faanross/numinon/internal/taskmanager"
 )
 
 // CommandOrchestrator handles the full lifecycle of a command

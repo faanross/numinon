@@ -1,12 +1,12 @@
 package router
 
 import (
+	"github.com/faanross/numinon/internal/listener"
+	"github.com/faanross/numinon/internal/orchestration"
+	"github.com/faanross/numinon/internal/server"
+	"github.com/faanross/numinon/internal/taskmanager"
+	"github.com/faanross/numinon/internal/tracker"
 	"log"
-	"numinon_shadow/internal/listener"
-	"numinon_shadow/internal/orchestration"
-	"numinon_shadow/internal/server"
-	"numinon_shadow/internal/taskmanager"
-	"numinon_shadow/internal/tracker"
 )
 
 // Global instances for task and orchestration management

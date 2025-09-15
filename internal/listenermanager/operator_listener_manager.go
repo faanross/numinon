@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/faanross/numinon/internal/clientapi"
+	"github.com/faanross/numinon/internal/listener"
 	"log"
-	"numinon_shadow/internal/clientapi"
-	"numinon_shadow/internal/listener"
 	"strings"
 )
 

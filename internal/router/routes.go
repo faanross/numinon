@@ -1,9 +1,9 @@
 package router
 
 import (
+	"github.com/faanross/numinon/internal/listener"
+	"github.com/faanross/numinon/internal/tracker"
 	"github.com/go-chi/chi/v5"
-	"numinon_shadow/internal/listener"
-	"numinon_shadow/internal/tracker"
 )
 
 // SetupRoutesWithManagerAndTracker sets up routes with FULL support
