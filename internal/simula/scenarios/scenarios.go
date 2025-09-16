@@ -3,8 +3,7 @@ package scenarios
 import "math/rand"
 
 // --- Run Command Scenarios ---
-// Collections of shell commands categorized by adversary intent. We've expanded these
-// significantly and broken them into more granular categories for better simulation control.
+// Collections of shell commands categorized by adversary intent.
 
 var SystemReconCommands = []string{
 	"hostname",
@@ -108,8 +107,6 @@ var ExfilUserFiles = []string{
 // Lists of process names to check for, categorized by type.
 var SecurityProductProcesses = []string{"MsMpEng.exe", "SentinelAgent.exe", "carbonblack.exe", "cb.exe", "NisSrv.exe", "SAVService.exe", "TmListen.exe", "WinDefend.exe"}
 var RemoteAccessProcesses = []string{"mstsc.exe", "TeamViewer.exe", "AnyDesk.exe", "chrome.exe", "svchost.exe -k termsvcs", "winvnc.exe"}
-
-// --- Helper Functions ---
 
 // GetRandom selects a random string from a slice of strings.
 func GetRandom(slice []string) string {

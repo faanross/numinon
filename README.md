@@ -1,4 +1,4 @@
-# Numinon - Advanced Network Threat Emulation Framework
+# Numinon - Network Threat Emulation Framework
 
 ## NOTE
 This project is still in development mode, sharing here for students of my courses + workshops to have access to current codebase.

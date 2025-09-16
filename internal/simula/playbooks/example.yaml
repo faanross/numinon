@@ -1,0 +1,48 @@
+
+# This playbook simulates a basic intrusion scenario over a long period.
+simulation_plan:
+  - name: "Initial Recon (System)"
+    action: "run_cmd"
+    category: "system_recon"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "10s" # Using short durations for testing, can be "1h30m" etc. in real use
+
+  - name: "Stage Tooling"
+    action: "upload"
+    category: "tooling"
+
+  - name: "Wait for a bit"
+    action: "sleep"
+    duration: "5s"
+
+  - name: "Discover Local Users"
+    action: "run_cmd"
+    category: "user_recon"
+
+  - name: "Exfiltrate a System File"
+    action: "download"
+    category: "system_files"
+
+  - name: "Go Quiet"
+    action: "sleep"
+    duration: "15s"
+
+  - name: "Change Egress to be More Interactive"
+    action: "morph"
+    # Morph is not category-based, so we provide explicit args.
+    args:
+      sleep: "5s"
+      jitter: 0.1
+
+  - name: "Check for Security Tools"
+    action: "enumerate"
+    category: "security_products"
+
+  - name: "Hop to a Stealthier Protocol"
+    action: "hop"
+    # Hop is also explicit.
+    args:
+      protocol: "WSS"
+      port: "443"
