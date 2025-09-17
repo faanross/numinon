@@ -1,7 +1,5 @@
 package plan
 
-import "encoding/json"
-
 // SimulationPlan is the top-level structure of a playbook YAML file.
 // It directly maps to the root of the YAML document.
 type SimulationPlan struct {
@@ -14,6 +12,6 @@ type SimulationStep struct {
 	Action   string `yaml:"action"`
 	Category string `yaml:"category"`
 	Duration string `yaml:"duration"`
-	
-	Args json.RawMessage `yaml:"args"` // Args used for commands that are not category-based (e.g., hop, morph).
+
+	Args map[string]interface{} `yaml:"args"` // Args used for commands that are not category-based (e.g., hop, morph).
 }

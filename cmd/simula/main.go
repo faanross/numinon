@@ -132,54 +132,54 @@ func runSimulation(conn *websocket.Conn, simPlan *plan.SimulationPlan, interrupt
 
 // handleTaskingAction is the "brain" of the simulator. It resolves the action
 // (either from a category or explicit args) and sends the request.
-// **Modified File: punkin_instigator/tools/simulator/main.go**
-
-// (This is the updated handleTaskingAction function. The rest of the file remains the same.)
-
 // handleTaskingAction is the "brain" of the simulator. It resolves the action
 // (either from a category or explicit args) and sends the request.
 func handleTaskingAction(conn *websocket.Conn, step plan.SimulationStep) {
 	var specificArgs interface{}
 	var apiAction string
 
-	// --- Resolve Action Arguments (Category vs. Explicit) ---
 	log.Printf("Action: %s (Category: '%s')", step.Action, step.Category)
+
+	// This helper function performs the two-step marshal/unmarshal process
+	// to convert the map from the YAML into a specific args struct.
+	mapToArgsStruct := func(m map[string]interface{}, targetStruct interface{}) error {
+		// Step 1: Marshal the generic map into JSON bytes.
+		jsonBytes, err := json.Marshal(m)
+		if err != nil {
+			return fmt.Errorf("failed to marshal intermediate args map: %w", err)
+		}
+		// Step 2: Unmarshal the JSON bytes into the target struct.
+		return json.Unmarshal(jsonBytes, targetStruct)
+	}
+
+	// --- Resolve Action Arguments ---
 	switch step.Action {
 	case "run_cmd":
 		apiAction = string(clientapi.ActionTaskAgentRunCmd)
-		var cmd string
-		// --- CORRECTED LOGIC ---
-		// Use the new, more granular categories we defined.
-		if step.Category == "system_recon" {
-			cmd = scenarios.GetRandom(scenarios.SystemReconCommands)
-		}
-		if step.Category == "network_recon" {
-			cmd = scenarios.GetRandom(scenarios.NetworkReconCommands)
-		}
-		if step.Category == "user_recon" {
-			cmd = scenarios.GetRandom(scenarios.UserReconCommands)
-		}
-		if step.Category == "discovery" {
-			cmd = scenarios.GetRandom(scenarios.DiscoveryCommands)
-		}
-		// --- END CORRECTION ---
-
-		if cmd == "" && step.Args == nil {
-			log.Printf("|❗ERR| No valid category or explicit args for run_cmd step '%s'. Skipping.", step.Name)
-			return
-		}
-
-		if cmd != "" {
-			log.Printf("Selected random command from category '%s': %s", step.Category, cmd)
+		if step.Category != "" {
+			var cmd string
+			if step.Category == "system_recon" {
+				cmd = scenarios.GetRandom(scenarios.SystemReconCommands)
+			}
+			if step.Category == "network_recon" {
+				cmd = scenarios.GetRandom(scenarios.NetworkReconCommands)
+			}
+			if step.Category == "user_recon" {
+				cmd = scenarios.GetRandom(scenarios.UserReconCommands)
+			}
+			if step.Category == "discovery" {
+				cmd = scenarios.GetRandom(scenarios.DiscoveryCommands)
+			}
+			log.Printf("Selected command from category '%s': %s", step.Category, cmd)
 			specificArgs = models.RunCmdArgs{CommandLine: cmd}
 		} else {
-			// Fallback to explicit args if no category is matched
 			var args models.RunCmdArgs
-			json.Unmarshal(step.Args, &args)
+			if err := mapToArgsStruct(step.Args, &args); err != nil {
+				log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+				return
+			}
 			specificArgs = args
-			log.Printf("Using explicit args for run_cmd: '%s'", args.CommandLine)
 		}
-
 	case "upload":
 		apiAction = string(clientapi.ActionTaskAgentUploadFile)
 		if step.Category == "tooling" {
@@ -188,7 +188,7 @@ func handleTaskingAction(conn *websocket.Conn, step plan.SimulationStep) {
 			destDir := scenarios.GetRandom(preset.PlausibleTargetDirs)
 			log.Printf("Selected upload preset: '%s' to '%s'", preset.DummyFileName, destDir)
 
-			content, err := ioutil.ReadFile(sourcePath)
+			content, err := os.ReadFile(sourcePath)
 			if err != nil {
 				log.Printf("|❗ERR| Failed to read dummy file %s: %v", sourcePath, err)
 				return
@@ -201,70 +201,76 @@ func handleTaskingAction(conn *websocket.Conn, step plan.SimulationStep) {
 			}
 		} else {
 			var args models.UploadArgs
-			json.Unmarshal(step.Args, &args)
+			if err := mapToArgsStruct(step.Args, &args); err != nil {
+				log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+				return
+			}
 			specificArgs = args
 		}
-
 	case "download":
 		apiAction = string(clientapi.ActionTaskAgentDownloadFile)
-		var path string
-		if step.Category == "system_files" {
-			path = scenarios.GetRandom(scenarios.ExfilSystemFiles)
-		}
-		if step.Category == "user_files" {
-			path = scenarios.GetRandom(scenarios.ExfilUserFiles)
-		}
-
-		if path == "" && step.Args == nil {
-			log.Printf("|❗ERR| No valid category or explicit args for download step '%s'. Skipping.", step.Name)
-			return
-		}
-
-		if path != "" {
-			log.Printf("Selected download path from category '%s': '%s'", step.Category, path)
+		if step.Category != "" {
+			var path string
+			if step.Category == "system_files" {
+				path = scenarios.GetRandom(scenarios.ExfilSystemFiles)
+			}
+			if step.Category == "user_files" {
+				path = scenarios.GetRandom(scenarios.ExfilUserFiles)
+			}
+			log.Printf("Selected download path from category '%s': %s", step.Category, path)
 			specificArgs = models.DownloadArgs{SourceFilePath: path}
 		} else {
 			var args models.DownloadArgs
-			json.Unmarshal(step.Args, &args)
+			if err := mapToArgsStruct(step.Args, &args); err != nil {
+				log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+				return
+			}
 			specificArgs = args
-			log.Printf("Using explicit args for download: '%s'", args.SourceFilePath)
 		}
-
 	case "enumerate":
 		apiAction = string(clientapi.ActionTaskAgentEnumerateProcs)
-		var procName string
-		if step.Category == "security_products" {
-			procName = scenarios.GetRandom(scenarios.SecurityProductProcesses)
-		}
-		if step.Category == "remote_access" {
-			procName = scenarios.GetRandom(scenarios.RemoteAccessProcesses)
-		}
-
-		if procName == "" && step.Args == nil {
-			log.Printf("No category matched for enumerate step '%s'. Assuming enumeration of all processes.", step.Name)
-			specificArgs = models.EnumerateArgs{ProcessName: ""}
-		} else if procName != "" {
+		if step.Category != "" {
+			var procName string
+			if step.Category == "security_products" {
+				procName = scenarios.GetRandom(scenarios.SecurityProductProcesses)
+			}
+			if step.Category == "remote_access" {
+				procName = scenarios.GetRandom(scenarios.RemoteAccessProcesses)
+			}
 			log.Printf("Selected process to enumerate from category '%s': '%s'", step.Category, procName)
 			specificArgs = models.EnumerateArgs{ProcessName: procName}
 		} else {
 			var args models.EnumerateArgs
-			json.Unmarshal(step.Args, &args)
+			if err := mapToArgsStruct(step.Args, &args); err != nil {
+				log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+				return
+			}
 			specificArgs = args
-			log.Printf("Using explicit args for enumerate: '%s'", args.ProcessName)
 		}
-
-	case "morph", "hop", "shellcode": // These actions require explicit args
-		if step.Action == "morph" {
-			apiAction = string(clientapi.ActionTaskAgentMorph)
+	case "morph":
+		apiAction = string(clientapi.ActionTaskAgentMorph)
+		var args models.MorphArgs
+		if err := mapToArgsStruct(step.Args, &args); err != nil {
+			log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+			return
 		}
-		if step.Action == "hop" {
-			apiAction = string(clientapi.ActionTaskAgentHop)
+		specificArgs = args
+	case "hop":
+		apiAction = string(clientapi.ActionTaskAgentHop)
+		var args models.HopArgs
+		if err := mapToArgsStruct(step.Args, &args); err != nil {
+			log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+			return
 		}
-		if step.Action == "shellcode" {
-			apiAction = string(clientapi.ActionTaskAgentExecuteShellcode)
+		specificArgs = args
+	case "shellcode":
+		apiAction = string(clientapi.ActionTaskAgentExecuteShellcode)
+		var args models.ShellcodeArgs
+		if err := mapToArgsStruct(step.Args, &args); err != nil {
+			log.Printf("|❗ERR| Could not parse explicit args for step '%s': %v", step.Name, err)
+			return
 		}
-		log.Printf("Using explicit args from playbook for '%s' action.", step.Action)
-		json.Unmarshal(step.Args, &specificArgs)
+		specificArgs = args
 	}
 
 	if specificArgs == nil {
@@ -272,7 +278,7 @@ func handleTaskingAction(conn *websocket.Conn, step plan.SimulationStep) {
 		return
 	}
 
-	// --- Build and Send Request (same as before) ---
+	// --- Build and Send Request ---
 	specificArgsBytes, _ := json.Marshal(specificArgs)
 	taskPayload := clientapi.TaskAgentPayload{AgentID: *agentID, Args: specificArgsBytes}
 	taskPayloadBytes, _ := json.Marshal(taskPayload)
