@@ -78,7 +78,6 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 
 	// Create client session manager (initially without task broker)
 	clientSessions := clientmanager.New(listenerAPI, nil, agentStateAPI)
-	clientSessions.SetTaskBroker(taskBroker)
 
 	// Create task broker with all its dependencies
 	taskBroker := taskbroker.NewBroker(
@@ -89,10 +88,7 @@ func NewDependencies(router http.Handler, existingTracker *tracker.Tracker) *Dep
 		agentTracker,
 	)
 
-	// Now update client sessions with the task broker
-	if csm, ok := clientSessions.(*clientmanager.clientSessionManagerImpl); ok {
-		csm.SetTaskBroker(taskBroker)
-	}
+	clientSessions.SetTaskBroker(taskBroker)
 
 	return &Dependencies{
 		TaskStore:      taskStore,
