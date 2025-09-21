@@ -1,0 +1,29 @@
+simulation_plan:
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Download - Manual"
+    action: "download"
+    args:
+      source_file_path: "C:\\Windows\\win.ini"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Download - Randomized from Category"
+    action: "download"
+    category: "user_files"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Download - Randomized from Category"
+    action: "download"
+    category: "system_files"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"

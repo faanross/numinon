@@ -1,0 +1,6 @@
+simulation_plan:
+  - name: "Sleep for a moment"
+    action: "sleep"
+    duration: "10s"
+
+

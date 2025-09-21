@@ -1,0 +1,10 @@
+simulation_plan:
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Execute Shellcode - Manual"
+    action: "shellcode"
+    args:
+      local_dll_path: "./samples/payloads/calc.dll"
+      export_name: "LaunchCalc"

@@ -1,0 +1,42 @@
+simulation_plan:
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Run Specific Command - Manual"
+    action: "run_cmd"
+    args:
+      command_line: "whoami"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Perform System Recon - Randomized (System)"
+    action: "run_cmd"
+    category: "system_recon"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Perform Network Recon - Randomized (Network)"
+    action: "run_cmd"
+    category: "network_recon"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Perform User Recon - Randomized (User)"
+    action: "run_cmd"
+    category: "user_recon"
+
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Perform General Discovery - Randomized (Discovery)"
+    action: "run_cmd"
+    category: "discovery"

@@ -1,0 +1,12 @@
+- name: "Hop - Transition to H2TLS on port 8787"
+  action: "hop"
+  args:
+    new_protocol: "H2TLS"
+    new_server_port: "8787"
+
+
+- name: "Hop - Transition to WSS on port 9898"
+  action: "hop"
+  args:
+    new_protocol: "WSS"
+    new_server_port: "9898"

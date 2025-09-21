@@ -1,0 +1,19 @@
+# This playbook demonstrates how to use the 'upload' and 'download' actions.
+
+# --- UPLOAD EXAMPLES ---
+
+# This tells the simulator to pick a random file from the `dummy_files` directory
+# and a random plausible destination path from the scenarios library.
+- name: "Upload - Randomized"
+  action: "upload"
+  category: "tooling"
+
+  # For a manual upload, you must provide the local path of the file on the machine running the simulator,
+  # and the destination details for the agent machine.
+- name: "Upload - Manual"
+  action: "upload"
+  args:
+    local_server_path: "tools/simulator/dummy_files/network.txt"
+    target_dir: "C:\\PerfLogs"
+    target_file: "net_data_manual.txt"
+

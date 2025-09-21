@@ -1,0 +1,21 @@
+# --- DOWNLOAD EXAMPLES ---
+
+# For a manual download, you provide the specific remote path on the agent.
+# The key 'source_file_path' matches the JSON tag in 'models.DownloadFileArgs'.
+- name: "Download - Manual"
+  action: "download"
+  args:
+    source_file_path: "C:\\Windows\\win.ini"
+
+# This tells the simulator to pick a random file path from the
+# 'ExfilUserFiles' list in our scenarios library.
+- name: "Download - Randomized from Category"
+  action: "download"
+  category: "user_files"
+
+  # This tells the simulator to pick a random file path from the
+  # 'ExfilUserFiles' list in our scenarios library.
+- name: "Download - Randomized from Category"
+  action: "download"
+  category: "system_files"
+

@@ -1,0 +1,5 @@
+- name: "Morph - Change sleep to 7s and jitter to 0.3"
+  action: "morph"
+  args:
+    base_sleep: "7s"
+    jitter: 0.3

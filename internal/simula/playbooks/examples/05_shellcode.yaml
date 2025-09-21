@@ -1,0 +1,10 @@
+# This playbook demonstrates how to use the 'shellcode' action.
+
+# For shellcode execution, you must provide the local path of the DLL on the machine running the simulator,
+# and the name of the export to be called by the agent's reflective loader.
+# The simulator will handle reading the DLL and Base64 encoding it.
+- name: "Execute Shellcode - Manual"
+  action: "shellcode"
+  args:
+    local_dll_path: "./samples/payloads/calc.dll"
+    export_name: "LaunchCalc"

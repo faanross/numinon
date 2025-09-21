@@ -1,0 +1,26 @@
+# This playbook demonstrates all possible ways to use the 'enumerate' action.
+
+# To enumerate all processes, simply call the action without any arguments or category.
+# The simulator will send a request with an empty process filter.
+- name: "Enumerate - Manual, All Processes"
+  action: "enumerate"
+  args: {}
+
+  # To filter for a specific process, provide the 'process_name' argument.
+  # The key 'process_name' must match the JSON tag in the models.EnumerateProcessesArgs struct.
+- name: "Enumerate - Manual, Specific Process"
+  action: "enumerate"
+  args:
+    process_name: "notepad.exe"
+
+  # This tells the simulator to randomly select a process name from the
+  # 'SecurityProductProcesses' list in the scenarios library and search for it.
+- name: "Enumerate - Automatic, Security Products"
+  action: "enumerate"
+  category: "security_products"
+
+  # This tells the simulator to randomly select a process name from the
+  # 'RemoteAccessProcesses' list in the scenarios library and search for it.
+- name: "Enumerate - Automatic, Remote Access Tools"
+  action: "enumerate"
+  category: "remote_access"

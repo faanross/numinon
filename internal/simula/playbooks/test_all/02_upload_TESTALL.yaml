@@ -1,0 +1,43 @@
+simulation_plan:
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Upload - Randomized from Category"
+    action: "upload"
+    category: "tooling"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Upload - Randomized from Category"
+    action: "upload"
+    category: "tooling"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Upload - Randomized from Category"
+    action: "upload"
+    category: "tooling"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Upload - Randomized from Category"
+    action: "upload"
+    category: "tooling"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Upload - Manual / Explicit"
+    action: "upload"
+    args:
+      local_server_path: "tools/simulator/dummy_files/network.txt"
+      target_dir: "C:\\Users\\vuilhond\\Desktop"
+      target_file: "net_data_manual.txt"

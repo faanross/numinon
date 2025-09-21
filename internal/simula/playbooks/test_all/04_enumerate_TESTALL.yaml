@@ -1,0 +1,33 @@
+simulation_plan:
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Enumerate - Manual, All Processes"
+    action: "enumerate"
+    args: {}
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Enumerate - Manual, Specific Process"
+    action: "enumerate"
+    args:
+      process_name: "notepad.exe"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Enumerate - Automatic, Security Products"
+    action: "enumerate"
+    category: "security_products"
+
+  - name: "Lie Dormant"
+    action: "sleep"
+    duration: "1s"
+
+  - name: "Enumerate - Automatic, Remote Access Tools"
+    action: "enumerate"
+    category: "remote_access"
