@@ -276,3 +276,8 @@ func (m *clientSessionManagerImpl) Broadcast(response clientapi.ServerResponse) 
 }
 
 var _ clientapi.ClientSessionManager = (*clientSessionManagerImpl)(nil)
+
+// SetTaskBroker updates the task broker reference
+func (m *clientSessionManagerImpl) SetTaskBroker(tb clientapi.TaskBroker) {
+	m.taskBroker = tb
+}

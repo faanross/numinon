@@ -21,6 +21,7 @@ type ClientSessionManager interface {
 	DispatchRequest(sessionID string, req ClientRequest)          // Handles an incoming ClientRequest from a specific client session.
 	SendToClient(sessionID string, response ServerResponse) error // Allows server to send a ServerResponse to a specific client session
 	Broadcast(response ServerResponse)                            // Sends a message to all currently active/registered client sessions.
+	SetTaskBroker(broker TaskBroker)
 }
 
 // TODO this will replace the listener manager in pkg listener

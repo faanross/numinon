@@ -2,7 +2,7 @@
 package main
 
 import (
-	"numinon_shadow/internal/agent/config"
+	"github.com/faanross/numinon/internal/agent/config"
 	"time"
 )
 
@@ -20,7 +20,7 @@ var embeddedAgentConfig = config.AgentConfig{
 	MinPaddingBytes:   64,
 	MaxPaddingBytes:   1024,
 	BeaconMode:        true,
-	UUID:              "bcf8e417-d135-42b7-a02c-fdba79a1af3a", // This will be the generated UUID pkg
+	UUID:              "c93a7d4c-9df3-499c-8c1b-de658e4e9264", // This will be the generated UUID pkg
 	SkipVerifyTLS:     true,
 }
 
