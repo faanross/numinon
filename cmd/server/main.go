@@ -36,7 +36,7 @@ func main() {
 
 	// Setup routes with full operator support
 	router.InitializeWithOperatorSupport(deps)
-	router.SetupRoutesWithManagerAndTracker(r, deps.ListenerMgr, agentTracker)
+	router.SetupHandlers(r)
 
 	// Add the client WebSocket handler route
 	r.HandleFunc("/client", clientapi.ClientWSHandler)
