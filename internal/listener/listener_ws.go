@@ -17,9 +17,12 @@ func NewWSListener(id string, config ListenerConfig) (Listener, error) {
 
 	fullAddr := fmt.Sprintf("%s:%s", config.IP, config.Port)
 
+	// Wrap the handler with middleware that adds listener ID
+	wrappedHandler := WithListenerID(id, config.Handler)
+
 	srv := &http.Server{
 		Addr:    fullAddr,
-		Handler: config.Handler,
+		Handler: wrappedHandler, // Use wrapped handler
 	}
 
 	l := &WSListener{

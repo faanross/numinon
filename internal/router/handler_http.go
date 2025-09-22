@@ -28,6 +28,7 @@ func CheckinHandler(w http.ResponseWriter, r *http.Request) {
 		// Determine listener ID from the request
 		// This might require adding the listener ID to the request context
 		listenerID := r.Context().Value("listenerID").(string) // TODO need to set this
+		
 		protocol := determineProtocol(r)
 
 		err := AgentTracker.RegisterConnection(

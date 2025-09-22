@@ -29,10 +29,13 @@ func NewHTTP3Listener(id string, config ListenerConfig) (Listener, error) {
 		return nil, fmt.Errorf("h3 listener failed to generate tls config: %w", err)
 	}
 
+	// Wrap the handler with middleware that adds listener ID
+	wrappedHandler := WithListenerID(id, config.Handler)
+
 	// 2. Create the http3.Server and explicitly provide the TLSConfig.
 	srv := &http3.Server{
 		Addr:      fullAddr,
-		Handler:   config.Handler,
+		Handler:   wrappedHandler,
 		TLSConfig: tlsConf, // Assign the config here
 	}
 

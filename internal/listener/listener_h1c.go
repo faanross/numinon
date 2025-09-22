@@ -23,9 +23,12 @@ func NewHTTP1ClearListener(id string, config ListenerConfig) (Listener, error) {
 
 	// Note we pass id, if we created it locally here, we need to do the exact same thing for every single protocol
 
+	// Wrap the handler with middleware that adds listener ID
+	wrappedHandler := WithListenerID(id, config.Handler)
+
 	srv := &http.Server{
 		Addr:    fullAddr,
-		Handler: config.Handler,
+		Handler: wrappedHandler, // Use wrapped handler
 	}
 
 	l := &http1ClearListener{
