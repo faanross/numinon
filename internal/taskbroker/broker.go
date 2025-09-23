@@ -407,7 +407,7 @@ func (b *Broker) OnTaskCompleted(task *taskmanager.Task) {
 		AgentID:        task.AgentID,
 		TaskID:         task.ID,
 		CommandType:    task.Command,
-		ResultData:     task.Result, // Raw result data
+		ResultData:     agentResult.Output,
 		CommandSuccess: strings.Contains(agentResult.Status, "success"),
 		ErrorMsg:       agentResult.Error,
 	}

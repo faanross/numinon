@@ -39,7 +39,7 @@ func (a *Agent) orchestrateRunCmd(task models.ServerTaskResponse) models.AgentTa
 	}
 
 	// Add this right after creating finalResult:
-	outputJSON, _ := json.Marshal(string(runCmdResult.CombinedOutput))
+	outputJSON, _ := json.Marshal(runCmdResult)
 	finalResult.Output = outputJSON
 
 	// Note: The 'execErr' from runner.Execute() is for catastrophic failures of the runner itself,
