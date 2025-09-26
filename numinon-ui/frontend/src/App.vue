@@ -1,9 +1,40 @@
-<script lang="ts" setup>
-import HelloWorld from './components/HelloWorld.vue'</script>
+<script setup lang="ts">
+import {ref, onMounted} from 'vue'
+import {Greet, GetSystemInfo} from '../wailsjs/go/main/App'
+
+const resultText = ref("Please enter your name below 👇")
+const name = ref('')
+const systemInfo = ref<any>({})
+
+onMounted(() => {
+  // Fetch system info when component mounts
+  GetSystemInfo().then(info => {
+    systemInfo.value = info
+  })
+})
+
+function greet() {
+  Greet(name.value).then(result => {
+    resultText.value = result
+  })
+}
+</script>
 
 <template>
-  <img id="logo" alt="Wails logo" src="./assets/images/logo-universal.png"/>
-  <HelloWorld/>
+  <main>
+    <div id="system-info">
+      <h3>System Information:</h3>
+      <p>OS: {{systemInfo.os}} ({{systemInfo.arch}})</p>
+      <p>Host: {{systemInfo.hostname}}</p>
+      <p>Time: {{systemInfo.current_time}}</p>
+    </div>
+
+    <div id="result">{{resultText}}</div>
+    <div id="input">
+      <input v-model="name" @keyup.enter="greet" type="text"/>
+      <button @click="greet">Greet</button>
+    </div>
+  </main>
 </template>
 
 <style>
