@@ -10,4 +10,6 @@ export function GetAgents():Promise<Array<models.Agent>>;
 
 export function GetConnectionStatus():Promise<models.ConnectionStatus>;
 
+export function GetServerMessageModel():Promise<models.ServerMessage>;
+
 export function SendCommand(arg1:models.CommandRequest):Promise<models.CommandResponse>;

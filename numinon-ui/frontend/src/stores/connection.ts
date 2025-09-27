@@ -1,18 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { EventsOn, EventsOff } from '../../wailsjs/runtime/runtime'
+import { EventsOn, EventsOff } from '../../wailsjs/runtime'
 import { Connect, Disconnect, GetConnectionStatus } from '../../wailsjs/go/main/App'
 import { models } from '../../wailsjs/go/models'
 
 export const useConnectionStore = defineStore('connection', () => {
     // State
-    const status = ref<models.ConnectionStatus>({
+    // THIS IS THE CORRECTED PART
+    const status = ref<models.ConnectionStatus>(new models.ConnectionStatus({
         connected: false,
         serverUrl: 'ws://localhost:8080/client',
         lastPing: new Date(),
         latency: 0,
         error: ''
-    })
+    }))
 
     const serverMessages = ref<models.ServerMessage[]>([])
     const pingHistory = ref<{timestamp: Date, latency: number}[]>([])

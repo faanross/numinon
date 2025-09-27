@@ -18,6 +18,10 @@ export function GetConnectionStatus() {
   return window['go']['main']['App']['GetConnectionStatus']();
 }
 
+export function GetServerMessageModel() {
+  return window['go']['main']['App']['GetServerMessageModel']();
+}
+
 export function SendCommand(arg1) {
   return window['go']['main']['App']['SendCommand'](arg1);
 }
