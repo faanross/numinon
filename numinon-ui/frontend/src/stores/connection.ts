@@ -1,126 +1,97 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { EventsOn, EventsOff } from '../../wailsjs/runtime'
-import { Connect, Disconnect, GetConnectionStatus } from '../../wailsjs/go/main/App'
-import { models } from '../../wailsjs/go/models'
+import {defineStore} from 'pinia';
+import {ref, reactive, computed} from 'vue';
+import {EventsOn} from '../../wailsjs/runtime';
+import {frontend} from '../../wailsjs/go/models';
+import {
+    Connect,
+    Disconnect,
+    GetAgents,
+    GetConnectionStatus,
+    SendCommand
+} from '../../wailsjs/go/main/App';
 
 export const useConnectionStore = defineStore('connection', () => {
-    // State
-    // THIS IS THE CORRECTED PART
-    const status = ref<models.ConnectionStatus>(new models.ConnectionStatus({
-        connected: false,
-        serverUrl: 'ws://localhost:8080/client',
-        lastPing: new Date(),
-        latency: 0,
-        error: ''
-    }))
+    // --- State ---
+    const status = reactive<frontend.ConnectionStatusDTO>(frontend.ConnectionStatusDTO.createFrom({ connected: false, latency: 0 }));
+    const agents = ref<frontend.AgentDTO[]>([]);
+    const serverMessages = ref<frontend.ServerMessageDTO[]>([]);
+    const pingHistory = ref<{ latency: number, timestamp: string }[]>([]);
 
-    const serverMessages = ref<models.ServerMessage[]>([])
-    const pingHistory = ref<{timestamp: Date, latency: number}[]>([])
+    // --- Computed Properties (Getters) ---
+    const isConnected = computed(() => status.connected);
 
-    // Computed
-    const isConnected = computed(() => status.value.connected)
     const averageLatency = computed(() => {
-        if (pingHistory.value.length === 0) return 0
-        const sum = pingHistory.value.reduce((acc, p) => acc + p.latency, 0)
-        return Math.round(sum / pingHistory.value.length)
-    })
+        if (pingHistory.value.length === 0) return 0;
+        const total = pingHistory.value.reduce((acc, ping) => acc + ping.latency, 0);
+        return Math.round(total / pingHistory.value.length);
+    });
 
-    // Actions
-    async function connect(url?: string) {
-        const result = await Connect(url || status.value.serverUrl)
-        status.value = result
-        return result
+
+    // --- Actions ---
+    function setupWailsListeners() {
+        EventsOn('connection_status', (newStatus: frontend.ConnectionStatusDTO) => {
+            Object.assign(status, newStatus);
+            // Add new pings to the history for the chart
+            if (newStatus.connected) {
+                pingHistory.value.push({ latency: newStatus.latency, timestamp: newStatus.lastPing });
+                // Keep the history to a reasonable size, e.g., last 50 pings
+                if (pingHistory.value.length > 50) {
+                    pingHistory.value.shift();
+                }
+            } else {
+                // Clear history on disconnect
+                pingHistory.value = [];
+            }
+        });
+
+        EventsOn('agent_update', (updatedAgents: frontend.AgentDTO[]) => {
+            agents.value = updatedAgents;
+        });
+
+        EventsOn('server_message', (message: frontend.ServerMessageDTO) => {
+            serverMessages.value.unshift(message);
+        });
+    }
+
+    async function connect(serverUrl: string) {
+        const result = await Connect(serverUrl);
+        Object.assign(status, result);
     }
 
     async function disconnect() {
-        const result = await Disconnect()
-        status.value = result
-        serverMessages.value = [] // Clear messages on disconnect
-        pingHistory.value = []
-        return result
+        const result = await Disconnect();
+        Object.assign(status, result);
     }
 
     async function refreshStatus() {
-        const result = await GetConnectionStatus()
-        status.value = result
-        return result
+        const result = await GetConnectionStatus();
+        Object.assign(status, result);
     }
 
-    // Event Listeners
-    function setupEventListeners() {
-        // Connection status updates
-        EventsOn('connection:status', (newStatus: models.ConnectionStatus) => {
-            console.log('Received connection:status event:', newStatus)
-            status.value = newStatus
-        })
-
-        // Connection established
-        EventsOn('connection:established', (newStatus: models.ConnectionStatus) => {
-            console.log('Connection established!', newStatus)
-            status.value = newStatus
-        })
-
-        // Connection failed
-        EventsOn('connection:failed', (newStatus: models.ConnectionStatus) => {
-            console.error('Connection failed:', newStatus.error)
-            status.value = newStatus
-        })
-
-        // Connection lost
-        EventsOn('connection:disconnected', (newStatus: models.ConnectionStatus) => {
-            console.log('Connection disconnected')
-            status.value = newStatus
-        })
-
-        // Ping updates
-        EventsOn('connection:ping', (ping: any) => {
-            console.log('Ping received:', ping)
-            pingHistory.value.push({
-                timestamp: new Date(ping.timestamp),
-                latency: ping.latency
-            })
-            // Keep only last 20 pings
-            if (pingHistory.value.length > 20) {
-                pingHistory.value.shift()
-            }
-        })
-
-        // Server messages
-        EventsOn('server:message', (message: models.ServerMessage) => {
-            console.log('Server message:', message)
-            serverMessages.value.unshift(message) // Add to beginning
-            // Keep only last 50 messages
-            if (serverMessages.value.length > 50) {
-                serverMessages.value.pop()
-            }
-        })
+    async function refreshAgents() {
+        agents.value = await GetAgents();
     }
 
-    function cleanupEventListeners() {
-        EventsOff('connection:status')
-        EventsOff('connection:established')
-        EventsOff('connection:failed')
-        EventsOff('connection:disconnected')
-        EventsOff('connection:ping')
-        EventsOff('server:message')
+    async function sendCommand(agentId: string, command: string, args: string) {
+        return await SendCommand({agentId, command, arguments: args});
     }
 
     return {
         // State
         status,
+        agents,
         serverMessages,
         pingHistory,
-
         // Computed
         isConnected,
         averageLatency,
-
         // Actions
         connect,
         disconnect,
         refreshStatus,
-        setupEventListeners,
-        cleanupEventListeners
-    }
-})
+        refreshAgents,
+        sendCommand,
+        setupWailsListeners,
+    };
+});
+

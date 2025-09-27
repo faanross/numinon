@@ -38,7 +38,7 @@
             v-for="(ping, index) in pingHistory"
             :key="index"
             class="ping-bar"
-            :style="{ height: `${(ping.latency / 100) * 100}%` }"
+            :style="{ height: `${Math.min(100, (ping.latency / 200) * 100)}%` }"
             :title="`${ping.latency}ms at ${new Date(ping.timestamp).toLocaleTimeString()}`"
         ></div>
       </div>
@@ -68,25 +68,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useConnectionStore } from '../stores/connection'
 import { storeToRefs } from 'pinia'
 
 const connectionStore = useConnectionStore()
+// storeToRefs correctly pulls all state and computed properties from the updated store
 const { status, isConnected, serverMessages, pingHistory, averageLatency } = storeToRefs(connectionStore)
 
 const serverUrl = ref('ws://localhost:8080/client')
 
 onMounted(() => {
-  // Setup event listeners when component mounts
-  connectionStore.setupEventListeners()
-  // Get initial status
+  // Use the correct function name from the store
+  connectionStore.setupWailsListeners()
+  // Get initial status on component load
   connectionStore.refreshStatus()
-})
-
-onUnmounted(() => {
-  // Cleanup event listeners when component unmounts
-  connectionStore.cleanupEventListeners()
 })
 
 async function handleConnect() {

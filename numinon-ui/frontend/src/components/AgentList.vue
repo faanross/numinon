@@ -1,98 +1,67 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useConnectionStore } from '../stores/connection';
+
+// IMPORTANT: Change the import here to the 'frontend' namespace.
+import { frontend } from '../../wailsjs/go/models';
+
+const store = useConnectionStore();
+
+// BEFORE: const selectedAgent = ref<models.Agent | null>(null);
+// AFTER: Use the AgentDTO type.
+const selectedAgent = ref<frontend.AgentDTO | null>(null);
+
+// BEFORE: const commandResponse = ref<models.CommandResponse | null>(null);
+// AFTER: Use the CommandResponseDTO type.
+const commandResponse = ref<frontend.CommandResponseDTO | null>(null);
+
+const commandInput = ref('whoami');
+
+// BEFORE: function selectAgent(agent: models.Agent) { ... }
+// AFTER: The agent parameter is now an AgentDTO.
+function selectAgent(agent: frontend.AgentDTO) {
+  selectedAgent.value = agent;
+  commandResponse.value = null; // Clear previous response
+}
+
+async function handleSendCommand() {
+  if (selectedAgent.value) {
+    commandResponse.value = await store.sendCommand(
+        selectedAgent.value.id,
+        commandInput.value,
+        '' // Assuming arguments might be added later
+    );
+  }
+}
+</script>
+
 <template>
-  <div class="agent-list">
-    <div class="header">
-      <h2>Agents ({{ agents.length }})</h2>
-      <button @click="refreshAgents" :disabled="!isConnected">
-        Refresh
-      </button>
-    </div>
-
-    <div v-if="!isConnected" class="warning">
-      Connect to server to view agents
-    </div>
-
-    <div v-else class="agents">
-      <div
-          v-for="agent in agents"
+  <div class="agent-list-panel">
+    <h2>Agents</h2>
+    <ul v-if="store.agents.length > 0">
+      <li
+          v-for="agent in store.agents"
           :key="agent.id"
-          class="agent-card"
-          :class="{ 'online': agent.status === 'online' }"
           @click="selectAgent(agent)"
+          :class="{ selected: selectedAgent?.id === agent.id }"
       >
-        <div class="agent-status"></div>
-        <div class="agent-info">
-          <div class="agent-name">{{ agent.hostname }}</div>
-          <div class="agent-details">
-            {{ agent.os }} • {{ agent.ipAddress }}
-          </div>
-          <div class="agent-lastseen">
-            Last seen: {{ formatTime(agent.lastSeen) }}
-          </div>
-        </div>
-        <button
-            v-if="selectedAgent?.id === agent.id"
-            @click.stop="sendTestCommand"
-            class="command-btn"
-        >
-          Send Command
-        </button>
-      </div>
-    </div>
+        <span>{{ agent.hostname }} ({{ agent.ipAddress }})</span>
+        <span>{{ agent.os }}</span>
+      </li>
+    </ul>
+    <p v-else>No agents connected.</p>
 
-    <!-- Command Result Display -->
-    <div v-if="commandResult" class="command-result" :class="{ 'success': commandResult.success }">
-      <h3>Command Result:</h3>
-      <pre>{{ commandResult.output || commandResult.error }}</pre>
-      <button @click="commandResult = null">Close</button>
+    <div v-if="selectedAgent" class="command-section">
+      <h3>Send Command to {{ selectedAgent.hostname }}</h3>
+      <input v-model="commandInput" placeholder="Enter command" />
+      <button @click="handleSendCommand">Send</button>
+      <div v-if="commandResponse" class="response-display">
+        <h4>Response:</h4>
+        <pre>{{ commandResponse.output || commandResponse.error }}</pre>
+      </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { GetAgents, SendCommand } from '../../wailsjs/go/main/App'
-import { models } from '../../wailsjs/go/models'
-import { useConnectionStore } from '../stores/connection'
-import { storeToRefs } from 'pinia'
-
-const connectionStore = useConnectionStore()
-const { isConnected } = storeToRefs(connectionStore)
-
-const agents = ref<models.Agent[]>([])
-const selectedAgent = ref<models.Agent | null>(null)
-const commandResult = ref<models.CommandResponse | null>(null)
-
-onMounted(() => {
-  if (isConnected.value) {
-    refreshAgents()
-  }
-})
-
-async function refreshAgents() {
-  if (!isConnected.value) return
-  agents.value = await GetAgents()
-}
-
-function selectAgent(agent: models.Agent) {
-  selectedAgent.value = agent
-}
-
-async function sendTestCommand() {
-  if (!selectedAgent.value) return
-
-  const request: models.CommandRequest = {
-    agentId: selectedAgent.value.id,
-    command: 'whoami',
-    arguments: ''
-  }
-
-  commandResult.value = await SendCommand(request)
-}
-
-function formatTime(time: any): string {
-  return new Date(time).toLocaleString()
-}
-</script>
 
 <style scoped>
 .agent-list {
