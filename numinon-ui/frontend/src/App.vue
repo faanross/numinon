@@ -1,52 +1,101 @@
-<script setup lang="ts">
-import {ref, onMounted} from 'vue'
-import {Greet, GetSystemInfo} from '../wailsjs/go/main/App'
-
-const resultText = ref("Please enter your name below 👇")
-const name = ref('')
-const systemInfo = ref<any>({})
-
-onMounted(() => {
-  // Fetch system info when component mounts
-  GetSystemInfo().then(info => {
-    systemInfo.value = info
-  })
-})
-
-function greet() {
-  Greet(name.value).then(result => {
-    resultText.value = result
-  })
-}
-</script>
 
 <template>
-  <main>
-    <div id="system-info">
-      <h3>System Information:</h3>
-      <p>OS: {{systemInfo.os}} ({{systemInfo.arch}})</p>
-      <p>Host: {{systemInfo.hostname}}</p>
-      <p>Time: {{systemInfo.current_time}}</p>
+  <div id="app">
+    <div class="header">
+      <h1>🎯 Numinon C2 Client</h1>
+      <div class="subtitle">Command & Control Interface</div>
     </div>
 
-    <div id="result">{{resultText}}</div>
-    <div id="input">
-      <input v-model="name" @keyup.enter="greet" type="text"/>
-      <button @click="greet">Greet</button>
+    <div class="main-layout">
+      <!-- Left Panel: Connection & Events -->
+      <div class="left-panel">
+        <ConnectionPanel />
+      </div>
+
+      <!-- Right Panel: Agents -->
+      <div class="right-panel">
+        <AgentList />
+      </div>
     </div>
-  </main>
+  </div>
 </template>
 
+<script setup lang="ts">
+import ConnectionPanel from './components/ConnectionPanel.vue'
+import AgentList from './components/AgentList.vue'
+</script>
+
 <style>
-#logo {
-  display: block;
-  width: 50%;
-  height: 50%;
-  margin: auto;
-  padding: 10% 0 0;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-origin: content-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: #1a1a1a;
+  color: #fff;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.subtitle {
+  opacity: 0.9;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.main-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.left-panel {
+  width: 400px;
+  border-right: 1px solid #333;
+  overflow-y: auto;
+}
+
+.right-panel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>
