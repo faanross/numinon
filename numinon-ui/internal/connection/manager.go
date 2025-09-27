@@ -49,12 +49,12 @@ func (m *Manager) Connect(serverURL string) models.ConnectionStatus {
 	// Simulate connection attempt
 	m.status.ServerURL = serverURL
 
-	// In a real app, you'd connect to WebSocket here
-	// For now, we'll simulate it
+	// TODO connect to WebSocket here
+	// For now just simulate it
 	time.Sleep(500 * time.Millisecond) // Simulate connection delay
 
 	// Randomly succeed or fail for demonstration
-	if rand.Float32() > 0.2 { // 80% success rate
+	if rand.Float32() > 0.1 { // 90% success rate
 		m.isConnected = true
 		m.status.Connected = true
 		m.status.LastPing = time.Now()
