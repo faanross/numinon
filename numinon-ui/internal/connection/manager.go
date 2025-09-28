@@ -30,15 +30,15 @@ func NewManager() *Manager {
 			ServerURL: "ws://localhost:8080/client",
 		},
 		pingStop:   make(chan bool),
-		mockAgents: generateMockAgents(), // We'll define this below
+		mockAgents: generateMockAgents(),
 	}
 }
 
 // Startup is called when the app starts
 func (m *Manager) Startup(ctx context.Context) {
 	m.ctx = ctx
-	// Emit initial status
-	runtime.EventsEmit(m.ctx, "connection:status", m.status)
+	// Emit initial status with consistent naming
+	runtime.EventsEmit(m.ctx, "connection_status", m.status)
 }
 
 // Connect establishes a connection to the C2 server
@@ -49,12 +49,12 @@ func (m *Manager) Connect(serverURL string) models.ConnectionStatus {
 	// Simulate connection attempt
 	m.status.ServerURL = serverURL
 
-	// TODO connect to WebSocket here
-	// For now just simulate it
-	time.Sleep(500 * time.Millisecond) // Simulate connection delay
+	// TODO: Real WebSocket connection here
+	// For now, simulate with delay
+	time.Sleep(500 * time.Millisecond)
 
-	// Randomly succeed or fail for demonstration
-	if rand.Float32() > 0.1 { // 90% success rate
+	// Simulate 90% success rate for demonstration
+	if rand.Float32() > 0.1 {
 		m.isConnected = true
 		m.status.Connected = true
 		m.status.LastPing = time.Now()
@@ -64,8 +64,8 @@ func (m *Manager) Connect(serverURL string) models.ConnectionStatus {
 		// Start ping routine
 		m.startPingRoutine()
 
-		// Emit success event
-		runtime.EventsEmit(m.ctx, "connection:established", m.status)
+		// CRITICAL: Emit the agents immediately after connection
+		runtime.EventsEmit(m.ctx, "agent_update", m.mockAgents)
 
 		// Start sending random events
 		go m.simulateServerEvents()
@@ -74,13 +74,10 @@ func (m *Manager) Connect(serverURL string) models.ConnectionStatus {
 		m.isConnected = false
 		m.status.Connected = false
 		m.status.Error = "Connection refused: unable to reach server"
-
-		// Emit failure event
-		runtime.EventsEmit(m.ctx, "connection:failed", m.status)
 	}
 
-	// Always emit status update
-	runtime.EventsEmit(m.ctx, "connection:status", m.status)
+	// Always emit status update with consistent naming
+	runtime.EventsEmit(m.ctx, "connection_status", m.status)
 
 	return m.status
 }
@@ -94,18 +91,22 @@ func (m *Manager) Disconnect() models.ConnectionStatus {
 		// Stop ping routine
 		if m.pingTicker != nil {
 			m.pingTicker.Stop()
-			m.pingStop <- true
+			select {
+			case m.pingStop <- true:
+			default:
+				// Channel might be closed, ignore
+			}
 		}
 
 		m.isConnected = false
 		m.status.Connected = false
 		m.status.Error = ""
 
-		// Emit disconnection event
-		runtime.EventsEmit(m.ctx, "connection:disconnected", m.status)
+		// Clear agents on disconnect
+		runtime.EventsEmit(m.ctx, "agent_update", []models.Agent{})
 	}
 
-	runtime.EventsEmit(m.ctx, "connection:status", m.status)
+	runtime.EventsEmit(m.ctx, "connection_status", m.status)
 	return m.status
 }
 
@@ -149,64 +150,78 @@ func (m *Manager) sendPing() {
 	m.status.LastPing = time.Now()
 	m.status.Latency = rand.Intn(50) + 10 // 10-60ms
 
-	// Emit ping event with latency
-	runtime.EventsEmit(m.ctx, "connection:ping", map[string]interface{}{
-		"timestamp": m.status.LastPing,
-		"latency":   m.status.Latency,
-	})
+	// Emit the full status update (frontend expects this)
+	runtime.EventsEmit(m.ctx, "connection_status", m.status)
 }
 
 // simulateServerEvents mimics receiving events from the C2 server
 func (m *Manager) simulateServerEvents() {
 	eventTypes := []string{"agent:connected", "agent:disconnected", "task:completed"}
+	ticker := time.NewTicker(time.Duration(rand.Intn(10)+5) * time.Second)
+	defer ticker.Stop()
 
 	for m.isConnected {
-		// Random delay between events
-		time.Sleep(time.Duration(rand.Intn(10)+5) * time.Second)
-
-		if !m.isConnected {
-			break
-		}
-
-		// Create random event
-		eventType := eventTypes[rand.Intn(len(eventTypes))]
-		message := models.ServerMessage{
-			Type:      eventType,
-			Timestamp: time.Now(),
-		}
-
-		// Add appropriate payload based on event type
-		switch eventType {
-		case "agent:connected":
-			agent := m.mockAgents[rand.Intn(len(m.mockAgents))]
-			agent.Status = "online"
-			agent.LastSeen = time.Now()
-			message.Payload = agent
-
-		case "agent:disconnected":
-			agent := m.mockAgents[rand.Intn(len(m.mockAgents))]
-			agent.Status = "offline"
-			message.Payload = agent
-
-		case "task:completed":
-			message.Payload = map[string]interface{}{
-				"taskId":  fmt.Sprintf("task_%d", rand.Intn(1000)),
-				"agentId": m.mockAgents[rand.Intn(len(m.mockAgents))].ID,
-				"success": rand.Float32() > 0.3,
+		select {
+		case <-ticker.C:
+			if !m.isConnected {
+				return
 			}
-		}
 
-		// Emit the server event
-		runtime.EventsEmit(m.ctx, "server:message", message)
+			// Create random event
+			eventType := eventTypes[rand.Intn(len(eventTypes))]
+			message := models.ServerMessage{
+				Type:      eventType,
+				Timestamp: time.Now(),
+			}
+
+			// Add appropriate payload based on event type
+			switch eventType {
+			case "agent:connected":
+				// Pick a random agent and mark it online
+				if len(m.mockAgents) > 0 {
+					agentIdx := rand.Intn(len(m.mockAgents))
+					m.mockAgents[agentIdx].Status = "online"
+					m.mockAgents[agentIdx].LastSeen = time.Now()
+					message.Payload = m.mockAgents[agentIdx]
+
+					// Emit updated agent list
+					runtime.EventsEmit(m.ctx, "agent_update", m.mockAgents)
+				}
+
+			case "agent:disconnected":
+				// Pick a random agent and mark it offline
+				if len(m.mockAgents) > 0 {
+					agentIdx := rand.Intn(len(m.mockAgents))
+					m.mockAgents[agentIdx].Status = "offline"
+					message.Payload = m.mockAgents[agentIdx]
+
+					// Emit updated agent list
+					runtime.EventsEmit(m.ctx, "agent_update", m.mockAgents)
+				}
+
+			case "task:completed":
+				message.Payload = map[string]interface{}{
+					"taskId":  fmt.Sprintf("task_%d", rand.Intn(1000)),
+					"agentId": m.mockAgents[rand.Intn(len(m.mockAgents))].ID,
+					"success": rand.Float32() > 0.3,
+				}
+			}
+
+			// Emit the server event
+			runtime.EventsEmit(m.ctx, "server_message", message)
+
+		case <-m.pingStop:
+			return
+		}
 	}
 }
 
-// GetAgents returns the list of agents (mock for now)
+// GetAgents returns the list of agents
 func (m *Manager) GetAgents() []models.Agent {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	// Update last seen times to make it look realistic
+	// Update last seen times for online agents
 	for i := range m.mockAgents {
 		if m.mockAgents[i].Status == "online" {
 			m.mockAgents[i].LastSeen = time.Now().Add(-time.Duration(rand.Intn(300)) * time.Second)
@@ -228,12 +243,24 @@ func (m *Manager) SendCommand(req models.CommandRequest) models.CommandResponse 
 	// Simulate command execution
 	time.Sleep(time.Duration(rand.Intn(2000)+500) * time.Millisecond)
 
-	// Randomly succeed or fail
-	if rand.Float32() > 0.2 { // 80% success rate
+	// Simulate 80% success rate
+	if rand.Float32() > 0.2 {
+		// Simulate different outputs based on command
+		var output string
+		switch req.Command {
+		case "whoami":
+			output = "nt authority\\system"
+		case "hostname":
+			output = "DESKTOP-" + fmt.Sprintf("%06d", rand.Intn(1000000))
+		case "pwd":
+			output = "C:\\Windows\\System32"
+		default:
+			output = fmt.Sprintf("Command '%s' executed successfully\n[Output would appear here]", req.Command)
+		}
+
 		return models.CommandResponse{
 			Success: true,
-			Output: fmt.Sprintf("Command '%s' executed successfully on agent %s\nOutput: [simulated output]",
-				req.Command, req.AgentID),
+			Output:  output,
 		}
 	}
 
@@ -245,7 +272,7 @@ func (m *Manager) SendCommand(req models.CommandRequest) models.CommandResponse 
 
 // Helper function to generate mock agents
 func generateMockAgents() []models.Agent {
-	agents := []models.Agent{
+	return []models.Agent{
 		{
 			ID:        "agent_001",
 			Hostname:  "DESKTOP-WIN10",
@@ -270,6 +297,13 @@ func generateMockAgents() []models.Agent {
 			IPAddress: "192.168.1.102",
 			LastSeen:  time.Now().Add(-2 * time.Hour),
 		},
+		{
+			ID:        "agent_004",
+			Hostname:  "win-server-2019",
+			OS:        "Windows Server 2019",
+			Status:    "online",
+			IPAddress: "192.168.1.103",
+			LastSeen:  time.Now().Add(-10 * time.Minute),
+		},
 	}
-	return agents
 }

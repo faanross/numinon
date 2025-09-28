@@ -1,71 +1,96 @@
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useConnectionStore } from '../stores/connection';
-
-// IMPORTANT: Change the import here to the 'frontend' namespace.
-import { frontend } from '../../wailsjs/go/models';
-
-const store = useConnectionStore();
-
-// BEFORE: const selectedAgent = ref<models.Agent | null>(null);
-// AFTER: Use the AgentDTO type.
-const selectedAgent = ref<frontend.AgentDTO | null>(null);
-
-// BEFORE: const commandResponse = ref<models.CommandResponse | null>(null);
-// AFTER: Use the CommandResponseDTO type.
-const commandResponse = ref<frontend.CommandResponseDTO | null>(null);
-
-const commandInput = ref('whoami');
-
-// BEFORE: function selectAgent(agent: models.Agent) { ... }
-// AFTER: The agent parameter is now an AgentDTO.
-function selectAgent(agent: frontend.AgentDTO) {
-  selectedAgent.value = agent;
-  commandResponse.value = null; // Clear previous response
-}
-
-async function handleSendCommand() {
-  if (selectedAgent.value) {
-    commandResponse.value = await store.sendCommand(
-        selectedAgent.value.id,
-        commandInput.value,
-        '' // Assuming arguments might be added later
-    );
-  }
-}
-</script>
-
 <template>
-  <div class="agent-list-panel">
-    <h2>Agents</h2>
-    <ul v-if="store.agents.length > 0">
-      <li
+  <div class="agent-list">
+    <div class="header">
+      <h2>Connected Agents ({{ store.agents.length }})</h2>
+      <button @click="store.refreshAgents" :disabled="!store.isConnected">
+        Refresh
+      </button>
+    </div>
+
+    <div v-if="!store.isConnected" class="warning">
+      ⚠️ Not connected to server
+    </div>
+
+    <div v-else-if="store.agents.length === 0" class="warning">
+      No agents connected yet. Waiting for agents...
+    </div>
+
+    <div v-else class="agents-grid">
+      <div
           v-for="agent in store.agents"
           :key="agent.id"
           @click="selectAgent(agent)"
-          :class="{ selected: selectedAgent?.id === agent.id }"
+          :class="['agent-card', { selected: selectedAgent?.id === agent.id }]"
       >
-        <span>{{ agent.hostname }} ({{ agent.ipAddress }})</span>
-        <span>{{ agent.os }}</span>
-      </li>
-    </ul>
-    <p v-else>No agents connected.</p>
+        <div class="agent-status" :class="agent.status"></div>
+        <div class="agent-info">
+          <div class="agent-name">{{ agent.hostname }}</div>
+          <div class="agent-details">
+            <span>{{ agent.os }}</span> • <span>{{ agent.ipAddress }}</span>
+          </div>
+          <div class="agent-id">ID: {{ agent.id }}</div>
+        </div>
+      </div>
+    </div>
 
-    <div v-if="selectedAgent" class="command-section">
-      <h3>Send Command to {{ selectedAgent.hostname }}</h3>
-      <input v-model="commandInput" placeholder="Enter command" />
-      <button @click="handleSendCommand">Send</button>
-      <div v-if="commandResponse" class="response-display">
-        <h4>Response:</h4>
-        <pre>{{ commandResponse.output || commandResponse.error }}</pre>
+    <!-- Command Panel -->
+    <div v-if="selectedAgent" class="command-panel">
+      <h3>Command Interface - {{ selectedAgent.hostname }}</h3>
+      <div class="command-input-group">
+        <input
+            v-model="commandInput"
+            placeholder="Enter command (e.g., whoami, hostname, pwd)"
+            @keyup.enter="handleSendCommand"
+            class="command-input"
+        />
+        <button @click="handleSendCommand" class="send-btn">
+          Execute →
+        </button>
+      </div>
+
+      <div v-if="commandResponse" class="command-result" :class="{ success: commandResponse.success }">
+        <div class="result-header">
+          <span>{{ commandResponse.success ? '✅ Success' : '❌ Failed' }}</span>
+        </div>
+        <pre class="result-output">{{ commandResponse.output || commandResponse.error }}</pre>
       </div>
     </div>
   </div>
 </template>
 
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useConnectionStore } from '../stores/connection';
+import { frontend } from '../../wailsjs/go/models';
+
+const store = useConnectionStore();
+
+const selectedAgent = ref<frontend.AgentDTO | null>(null);
+const commandResponse = ref<frontend.CommandResponseDTO | null>(null);
+const commandInput = ref('whoami');
+
+function selectAgent(agent: frontend.AgentDTO) {
+  selectedAgent.value = agent;
+  commandResponse.value = null;
+}
+
+async function handleSendCommand() {
+  if (selectedAgent.value && commandInput.value.trim()) {
+    commandResponse.value = await store.sendCommand(
+        selectedAgent.value.id,
+        commandInput.value.trim(),
+        ''
+    );
+  }
+}
+</script>
+
 <style scoped>
 .agent-list {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
 .header {
@@ -88,6 +113,11 @@ async function handleSendCommand() {
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.header button:hover:not(:disabled) {
+  background: #22c55e;
 }
 
 .header button:disabled {
@@ -105,10 +135,13 @@ async function handleSendCommand() {
   text-align: center;
 }
 
-.agents {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .agent-card {
@@ -124,18 +157,36 @@ async function handleSendCommand() {
 }
 
 .agent-card:hover {
-  border-color: #4ade80;
+  border-color: #60a5fa;
+  transform: translateY(-2px);
 }
 
-.agent-card.online .agent-status {
-  background: #4ade80;
+.agent-card.selected {
+  border-color: #4ade80;
+  background: #2a3a2a;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
 }
 
 .agent-status {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-status.online {
+  background: #4ade80;
+  box-shadow: 0 0 10px #4ade80;
+  animation: pulse 2s infinite;
+}
+
+.agent-status.offline {
   background: #f87171;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .agent-info {
@@ -151,58 +202,99 @@ async function handleSendCommand() {
 .agent-details {
   color: #888;
   font-size: 12px;
+  margin-bottom: 4px;
 }
 
-.agent-lastseen {
+.agent-id {
   color: #666;
   font-size: 11px;
-  margin-top: 4px;
+  font-family: monospace;
 }
 
-.command-btn {
-  padding: 6px 12px;
+.command-panel {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.command-panel h3 {
+  color: #fff;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.command-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.command-input {
+  flex: 1;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-family: monospace;
+}
+
+.command-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.send-btn {
+  padding: 10px 20px;
   background: #60a5fa;
   color: #000;
   border: none;
   border-radius: 4px;
-  font-size: 12px;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.send-btn:hover {
+  background: #3b82f6;
 }
 
 .command-result {
-  margin-top: 20px;
-  padding: 15px;
+  flex: 1;
   background: #1a1a1a;
   border-radius: 8px;
   border: 2px solid #f87171;
+  overflow: hidden;
 }
 
 .command-result.success {
   border-color: #4ade80;
 }
 
-.command-result h3 {
-  color: #fff;
-  margin: 0 0 10px 0;
-  font-size: 14px;
+.result-header {
+  padding: 10px 15px;
+  background: rgba(0,0,0,0.5);
+  border-bottom: 1px solid #333;
+  font-weight: bold;
 }
 
-.command-result pre {
-  color: #ccc;
-  font-family: monospace;
-  font-size: 12px;
+.result-output {
+  padding: 15px;
+  margin: 0;
+  color: #4ade80;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
   white-space: pre-wrap;
-  margin: 10px 0;
+  word-break: break-all;
+  overflow-y: auto;
+  max-height: 300px;
 }
 
-.command-result button {
-  padding: 6px 12px;
-  background: #444;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
+.command-result:not(.success) .result-output {
+  color: #f87171;
 }
 </style>
