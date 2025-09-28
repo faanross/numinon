@@ -41,3 +41,11 @@ type CommandResponse struct {
 	Output  string `json:"output"`
 	Error   string `json:"error,omitempty"`
 }
+
+type AgentStatus string
+
+const (
+	AgentStatusOnline  AgentStatus = "online"
+	AgentStatusOffline AgentStatus = "offline"
+	AgentStatusStale   AgentStatus = "stale" // No check-in for X minutes (TBD)
+)
