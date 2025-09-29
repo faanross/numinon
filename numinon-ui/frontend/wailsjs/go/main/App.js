@@ -18,10 +18,18 @@ export function GetConnectionStatus() {
   return window['go']['main']['App']['GetConnectionStatus']();
 }
 
-export function GetServerMessageModel() {
-  return window['go']['main']['App']['GetServerMessageModel']();
+export function GetPreferences() {
+  return window['go']['main']['App']['GetPreferences']();
+}
+
+export function GetServerMessages() {
+  return window['go']['main']['App']['GetServerMessages']();
 }
 
 export function SendCommand(arg1) {
   return window['go']['main']['App']['SendCommand'](arg1);
+}
+
+export function UpdatePreferences(arg1) {
+  return window['go']['main']['App']['UpdatePreferences'](arg1);
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -17,16 +18,24 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "numinon-ui", // Window title
-		Width:  1024,
-		Height: 768,
+		Title:  "⚫numinonC2", // Window title
+		Width:  1200,
+		Height: 800,
 		AssetServer: &assetserver.Options{
 			Assets: assets, // Embedded frontend files
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.startup, // Called when app starts
+		OnShutdown:       app.shutdown,
+		OnBeforeClose:    app.beforeClose,
 		Bind: []interface{}{
 			app, // Makes app's exported methods available to frontend
+		},
+
+		// Platform-specific options
+		Windows: &windows.Options{
+			DisableWindowIcon:                 false,
+			DisableFramelessWindowDecorations: false,
 		},
 	})
 

@@ -1,28 +1,44 @@
-
 <template>
   <div id="app">
     <div class="header">
       <h1>🎯 Numinon C2 Client</h1>
-      <div class="subtitle">Command & Control Interface</div>
+      <div class="header-controls">
+        <button @click="showSettings" class="settings-btn" title="Settings">
+          ⚙️
+        </button>
+      </div>
     </div>
 
     <div class="main-layout">
-      <!-- Left Panel: Connection & Events -->
+      <!-- Your existing layout -->
       <div class="left-panel">
         <ConnectionPanel />
       </div>
-
-      <!-- Right Panel: Agents -->
       <div class="right-panel">
         <AgentList />
       </div>
     </div>
+
+    <!-- Settings Dialog -->
+    <SettingsDialog ref="settingsDialog" />
+
+    <!-- Notification Toast -->
+    <NotificationToast />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import ConnectionPanel from './components/ConnectionPanel.vue'
 import AgentList from './components/AgentList.vue'
+import SettingsDialog from './components/SettingsDialog.vue'
+import NotificationToast from './components/NotificationToast.vue'
+
+const settingsDialog = ref()
+
+function showSettings() {
+  settingsDialog.value.show = true
+}
 </script>
 
 <style>
@@ -98,4 +114,34 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.header-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 </style>

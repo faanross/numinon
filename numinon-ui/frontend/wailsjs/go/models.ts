@@ -22,6 +22,22 @@ export namespace frontend {
 	        this.ipAddress = source["ipAddress"];
 	    }
 	}
+	export class CommandRequestDTO {
+	    agentId: string;
+	    command: string;
+	    arguments: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CommandRequestDTO(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.agentId = source["agentId"];
+	        this.command = source["command"];
+	        this.arguments = source["arguments"];
+	    }
+	}
 	export class CommandResponseDTO {
 	    success: boolean;
 	    output: string;
@@ -72,27 +88,6 @@ export namespace frontend {
 	        this.type = source["type"];
 	        this.timestamp = source["timestamp"];
 	        this.payload = source["payload"];
-	    }
-	}
-
-}
-
-export namespace models {
-	
-	export class CommandRequest {
-	    agentId: string;
-	    command: string;
-	    arguments: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new CommandRequest(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.agentId = source["agentId"];
-	        this.command = source["command"];
-	        this.arguments = source["arguments"];
 	    }
 	}
 

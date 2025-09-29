@@ -22,7 +22,9 @@ export const useConnectionStore = defineStore('connection', () => {
         })
     );
     const agents = ref<frontend.AgentDTO[]>([]);
+    
     const serverMessages = ref<frontend.ServerMessageDTO[]>([]);
+
     const pingHistory = ref<{ latency: number, timestamp: string }[]>([]);
 
     // --- Computed Properties ---

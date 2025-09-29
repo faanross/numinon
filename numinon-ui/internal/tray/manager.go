@@ -2,16 +2,13 @@ package tray
 
 import (
 	"context"
-	_ "embed"
-	"fmt"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"numinon-ui/internal/config"
 )
 
-//go:embed icon.png
-var icon []byte
-
 // Manager handles system tray functionality
+// Note: Full system tray support in Wails v2 is limited
+// This implementation uses window minimize/hide as a workaround
 type Manager struct {
 	ctx    context.Context
 	config *config.AppConfig
@@ -29,132 +26,61 @@ func NewManager(cfg *config.AppConfig) *Manager {
 	}
 }
 
-// Setup initializes the system tray
+// Setup initializes the tray-like behavior
 func (m *Manager) Setup(ctx context.Context) error {
 	m.ctx = ctx
 
-	// Create the tray menu
-	menu := m.createMenu()
-
-	// Set the tray with our icon and menu
-	runtime.SetSystemTray(m.ctx, runtime.SystemTray{
-		Icon:    icon, // We'll need to add an icon file
-		Tooltip: "Numinon C2 Client",
-		Menu:    menu,
-	})
-
-	// Set up tray click handler (single click to show/hide)
-	runtime.OnSystemTrayClick(m.ctx, func() {
-		m.toggleWindow()
-	})
-
-	// Set up tray right-click handler (show menu)
-	runtime.OnSystemTrayRightClick(m.ctx, func() {
-		runtime.ShowSystemTrayMenu(m.ctx)
-	})
+	// Wails v2 doesn't have full system tray support yet
+	// We'll use window events to simulate tray behavior
 
 	return nil
 }
 
-// createMenu builds the tray menu structure
-func (m *Manager) createMenu() *runtime.Menu {
-	menu := runtime.NewMenu()
+// showWindow brings the window to front
+func (m *Manager) ShowWindow() {
+	runtime.WindowShow(m.ctx)
+	m.isVisible = true
+}
 
-	// Show/Hide item (dynamically updates)
-	if m.isVisible {
-		menu.AddText("Hide Window", nil, func(cd *runtime.CallbackData) {
-			m.hideWindow()
-		})
+// hideWindow hides the window (simulates minimize to tray)
+func (m *Manager) HideWindow() {
+	if m.config.General.MinimizeToTray {
+		runtime.WindowHide(m.ctx)
+		m.isVisible = false
+
+		// Show notification if enabled
+		if m.config.General.ShowNotifications {
+			m.showNotification("Numinon is still running",
+				"The app has been minimized to the background")
+		}
 	} else {
-		menu.AddText("Show Window", nil, func(cd *runtime.CallbackData) {
-			m.showWindow()
-		})
+		runtime.WindowMinimise(m.ctx)
 	}
-
-	menu.AddSeparator()
-
-	// Connection status submenu
-	connectionMenu := menu.AddSubmenu("Connection")
-	connectionMenu.AddText("Connected to: "+m.config.Connection.ServerURL, nil, nil)
-	connectionMenu.AddSeparator()
-	connectionMenu.AddText("Disconnect", nil, func(cd *runtime.CallbackData) {
-		runtime.EventsEmit(m.ctx, "tray:disconnect")
-	})
-
-	menu.AddSeparator()
-
-	// Settings
-	menu.AddText("Settings...", nil, func(cd *runtime.CallbackData) {
-		m.showWindow()
-		runtime.EventsEmit(m.ctx, "tray:show-settings")
-	})
-
-	menu.AddSeparator()
-
-	// Quit
-	menu.AddText("Quit Numinon", nil, func(cd *runtime.CallbackData) {
-		m.quit()
-	})
-
-	return menu
 }
 
 // toggleWindow shows or hides the main window
-func (m *Manager) toggleWindow() {
+func (m *Manager) ToggleWindow() {
 	if m.isVisible {
-		m.hideWindow()
+		m.HideWindow()
 	} else {
-		m.showWindow()
+		m.ShowWindow()
 	}
 }
 
-// showWindow brings the window to front
-func (m *Manager) showWindow() {
-	runtime.Show(m.ctx)
-	m.isVisible = true
-	m.updateMenu() // Update menu text
-}
-
-// hideWindow hides the window to tray
-func (m *Manager) hideWindow() {
-	if m.config.General.MinimizeToTray {
-		runtime.Hide(m.ctx)
-		m.isVisible = false
-		m.updateMenu() // Update menu text
-
-		// Show notification on first minimize
-		if m.config.General.ShowNotifications {
-			m.showNotification("Numinon is still running",
-				"The app has been minimized to the system tray")
-		}
-	} else {
-		runtime.Minimise(m.ctx)
-	}
-}
-
-// updateMenu refreshes the tray menu
-func (m *Manager) updateMenu() {
-	menu := m.createMenu()
-	runtime.SetSystemTrayMenu(m.ctx, menu)
-}
-
-// showNotification displays a system notification
+// showNotification emits an event for the frontend to handle
 func (m *Manager) showNotification(title, message string) {
-	// Note: Wails doesn't have built-in notifications yet,
-	// but we can emit an event for the frontend to handle
 	runtime.EventsEmit(m.ctx, "notification", map[string]string{
 		"title":   title,
 		"message": message,
 	})
 }
 
-// quit handles application shutdown
-func (m *Manager) quit() {
-	m.isQuitting = true
-	runtime.Quit(m.ctx)
-}
-
 // IsQuitting returns whether the app is shutting down
 func (m *Manager) IsQuitting() bool {
 	return m.isQuitting
+}
+
+// SetQuitting marks the app as quitting
+func (m *Manager) SetQuitting(quitting bool) {
+	m.isQuitting = quitting
 }
