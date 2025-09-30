@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
-	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -16,30 +18,43 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 
+	// Setup signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	// Handle OS signals in a goroutine
+	go func() {
+		sig := <-sigChan
+		println("Received signal:", sig.String(), "- Shutting down gracefully...")
+
+		// Trigger shutdown through the lifecycle manager
+		if app.lifecycleManager != nil {
+			app.lifecycleManager.ForceShutdown()
+		} else {
+			// Fallback if lifecycle manager isn't initialized
+			os.Exit(0)
+		}
+	}()
+
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "⚫numinonC2", // Window title
+		Title:  "Numinon C2 Client",
 		Width:  1200,
 		Height: 800,
 		AssetServer: &assetserver.Options{
-			Assets: assets, // Embedded frontend files
+			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup, // Called when app starts
+		OnStartup:        app.startup,
 		OnShutdown:       app.shutdown,
 		OnBeforeClose:    app.beforeClose,
 		Bind: []interface{}{
-			app, // Makes app's exported methods available to frontend
-		},
-
-		// Platform-specific options
-		Windows: &windows.Options{
-			DisableWindowIcon:                 false,
-			DisableFramelessWindowDecorations: false,
+			app,
 		},
 	})
 
 	if err != nil {
 		println("Error:", err.Error())
+		os.Exit(1)
 	}
 }
