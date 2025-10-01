@@ -112,8 +112,13 @@
       </div>
 
       <div class="settings-footer">
-        <button class="btn-primary" @click="save">Save</button>
-        <button class="btn-secondary" @click="close">Cancel</button>
+        <div class="footer-left">
+          <button class="btn-danger" @click="quitApp">Quit Application</button>
+        </div>
+        <div class="footer-right">
+          <button class="btn-primary" @click="save">Save</button>
+          <button class="btn-secondary" @click="close">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -123,6 +128,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { GetPreferences, UpdatePreferences } from '../../wailsjs/go/main/App'
 import { EventsOn } from '../../wailsjs/runtime'
+import { EventsEmit } from '../../wailsjs/runtime'
 
 const show = ref(false)
 const activeTab = ref('General')
@@ -165,6 +171,12 @@ async function updatePreferences() {
   await UpdatePreferences(preferences)
 }
 
+function quitApp() {
+  // Emit event to backend to initiate shutdown
+  EventsEmit('app:quit-requested')
+  show.value = false
+}
+
 function save() {
   updatePreferences()
   show.value = false
@@ -175,6 +187,11 @@ function close() {
   // Reload preferences to discard changes
   loadPreferences()
 }
+
+defineExpose({
+  show
+})
+
 </script>
 
 <style scoped>
@@ -339,5 +356,36 @@ function close() {
 
 .btn-secondary:hover {
   background: #555;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-top: 1px solid #444;
+}
+
+.footer-left {
+  flex: 1;
+}
+
+.footer-right {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-danger {
+  padding: 8px 20px;
+  background: #f87171;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #ef4444;
 }
 </style>

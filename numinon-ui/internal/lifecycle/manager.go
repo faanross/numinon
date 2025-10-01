@@ -49,6 +49,12 @@ func (m *Manager) Startup(ctx context.Context) error {
 	m.trayManager = tray.NewManager(cfg)
 	m.windowManager = window.NewManager(cfg)
 
+	// Listen for quit request from frontend
+	runtime.EventsOn(ctx, "app:quit-requested", func(optionalData ...interface{}) {
+		runtime.LogInfo(ctx, "Quit requested from frontend")
+		m.ForceShutdown()
+	})
+
 	// Set up tray-like behavior (limited in Wails v2)
 	if err := m.trayManager.Setup(ctx); err != nil {
 		runtime.LogError(ctx, "Failed to setup tray manager: "+err.Error())
@@ -87,6 +93,7 @@ func (m *Manager) BeforeClose(ctx context.Context) bool {
 	}
 
 	// Check if we should minimize to tray instead of closing
+	// This handles the X button click
 	if m.config != nil && m.config.General.MinimizeToTray {
 		runtime.LogInfo(ctx, "Minimizing to tray instead of closing")
 		runtime.WindowHide(ctx)
@@ -95,17 +102,17 @@ func (m *Manager) BeforeClose(ctx context.Context) bool {
 		if m.config.General.ShowNotifications {
 			runtime.EventsEmit(ctx, "notification", map[string]string{
 				"title":   "Running in background",
-				"message": "Numinon has been minimized to the background. Click the app icon to restore.",
+				"message": "Numinon is still running. Use Quit from the menu to exit completely.",
 				"type":    "info",
 			})
 		}
-		return true // Prevent close
+		return true // Prevent close - minimize instead
 	}
 
 	// If not minimizing to tray, proceed with shutdown
 	runtime.LogInfo(ctx, "Closing window and shutting down")
-	go m.Shutdown() // Run shutdown asynchronously to avoid blocking
-	return false    // Allow close
+	go m.Shutdown()
+	return false // Allow close
 }
 
 // Shutdown performs graceful shutdown
