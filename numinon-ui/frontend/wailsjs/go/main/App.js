@@ -6,8 +6,20 @@ export function Connect(arg1) {
   return window['go']['main']['App']['Connect'](arg1);
 }
 
+export function ConnectWebSocket(arg1) {
+  return window['go']['main']['App']['ConnectWebSocket'](arg1);
+}
+
 export function Disconnect() {
   return window['go']['main']['App']['Disconnect']();
+}
+
+export function DisconnectWebSocket() {
+  return window['go']['main']['App']['DisconnectWebSocket']();
+}
+
+export function ExecuteAgentTask(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ExecuteAgentTask'](arg1, arg2, arg3);
 }
 
 export function GetAgents() {
@@ -26,8 +38,16 @@ export function GetServerMessages() {
   return window['go']['main']['App']['GetServerMessages']();
 }
 
+export function GetWebSocketStatus() {
+  return window['go']['main']['App']['GetWebSocketStatus']();
+}
+
 export function SendCommand(arg1) {
   return window['go']['main']['App']['SendCommand'](arg1);
+}
+
+export function SendWebSocketMessage(arg1, arg2) {
+  return window['go']['main']['App']['SendWebSocketMessage'](arg1, arg2);
 }
 
 export function UpdatePreferences(arg1) {

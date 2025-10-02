@@ -4,7 +4,13 @@ import {frontend} from '../models';
 
 export function Connect(arg1:string):Promise<frontend.ConnectionStatusDTO>;
 
+export function ConnectWebSocket(arg1:string):Promise<Record<string, any>>;
+
 export function Disconnect():Promise<frontend.ConnectionStatusDTO>;
+
+export function DisconnectWebSocket():Promise<Record<string, any>>;
+
+export function ExecuteAgentTask(arg1:string,arg2:string,arg3:Record<string, any>):Promise<Record<string, any>>;
 
 export function GetAgents():Promise<Array<frontend.AgentDTO>>;
 
@@ -14,6 +20,10 @@ export function GetPreferences():Promise<Record<string, any>>;
 
 export function GetServerMessages():Promise<Array<frontend.ServerMessageDTO>>;
 
+export function GetWebSocketStatus():Promise<Record<string, any>>;
+
 export function SendCommand(arg1:frontend.CommandRequestDTO):Promise<frontend.CommandResponseDTO>;
+
+export function SendWebSocketMessage(arg1:string,arg2:any):Promise<Record<string, any>>;
 
 export function UpdatePreferences(arg1:Record<string, any>):Promise<void>;
