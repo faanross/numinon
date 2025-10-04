@@ -1,3 +1,5 @@
+// frontend/src/services/websocket.service.ts
+
 import { EventsOn, EventsOff } from '../../wailsjs/runtime';
 import {
     ConnectWebSocket,
@@ -6,20 +8,17 @@ import {
     GetWebSocketStatus,
     ExecuteAgentTask
 } from '../../wailsjs/go/main/App';
-import type { WSMessage, WSState, WSConfig } from '../types/websocket.types';
+import { WSMessage, WSState } from '../types/websocket.types';
 
 /**
  * WebSocketService - Manages WebSocket communication through Wails backend
  *
- * Architecture Note: The actual WebSocket connection lives in Go.
- * This service is a facade that:
- * 1. Calls Go functions via Wails bindings
- * 2. Listens to events emitted by Go
- * 3. Provides a clean API for Vue components
+ * Teaching Note: The key issue was using string literals instead of enum values.
+ * TypeScript enums are actual objects at runtime, not just types!
  */
 export class WebSocketService {
-    private state: WSState = 'disconnected';
-    private eventHandlers: Map<string, Function> = new Map();
+    private state: WSState = WSState.DISCONNECTED;  // FIX: Use enum value
+    private eventHandlers: Map<string, (...args: any[]) => void> = new Map();  // FIX: Proper type
     private messageQueue: WSMessage[] = [];
 
     constructor() {
@@ -32,28 +31,28 @@ export class WebSocketService {
     private setupEventListeners(): void {
         // Connection state events
         this.on('ws:connecting', () => {
-            this.state = 'connecting';
+            this.state = WSState.CONNECTING;  // FIX: Use enum
             console.log('[WS] Connecting...');
         });
 
         this.on('ws:connected', (data: any) => {
-            this.state = 'connected';
+            this.state = WSState.CONNECTED;  // FIX: Use enum
             console.log('[WS] Connected:', data);
             this.processQueuedMessages();
         });
 
         this.on('ws:disconnected', () => {
-            this.state = 'disconnected';
+            this.state = WSState.DISCONNECTED;  // FIX: Use enum
             console.log('[WS] Disconnected');
         });
 
         this.on('ws:reconnecting', (data: any) => {
-            this.state = 'reconnecting';
+            this.state = WSState.RECONNECTING;  // FIX: Use enum
             console.log(`[WS] Reconnecting... Attempt ${data.attempt}`);
         });
 
         this.on('ws:error', (error: any) => {
-            this.state = 'error';
+            this.state = WSState.ERROR;  // FIX: Use enum
             console.error('[WS] Error:', error);
         });
 
@@ -104,7 +103,12 @@ export class WebSocketService {
     async send(type: string, payload?: any): Promise<any> {
         // Queue if not connected
         if (!this.isConnected()) {
-            this.queueMessage({ type, payload } as WSMessage);
+            this.queueMessage({
+                id: crypto.randomUUID(),  // FIX: Add required fields
+                type: type as any,
+                timestamp: new Date().toISOString(),
+                payload
+            });
             throw new Error('Not connected - message queued');
         }
 
@@ -116,7 +120,12 @@ export class WebSocketService {
             return result.message;
         } catch (error) {
             console.error('[WS] Send failed:', error);
-            this.queueMessage({ type, payload } as WSMessage);
+            this.queueMessage({
+                id: crypto.randomUUID(),
+                type: type as any,
+                timestamp: new Date().toISOString(),
+                payload
+            });
             throw error;
         }
     }
@@ -152,7 +161,7 @@ export class WebSocketService {
      * Checks if connected
      */
     isConnected(): boolean {
-        return this.state === 'connected' || this.state === 'authenticated';
+        return this.state === WSState.CONNECTED || this.state === WSState.AUTHENTICATED;
     }
 
     /**
@@ -203,10 +212,16 @@ export class WebSocketService {
 
     /**
      * Registers an event listener
+     * FIX: Proper typing for Wails event handlers
      */
-    on(event: string, handler: Function): void {
-        EventsOn(event, handler);
-        this.eventHandlers.set(event, handler);
+    on(event: string, handler: (...data: any[]) => void): void {
+        // Wrap handler to match Wails signature
+        const wrappedHandler = (...args: any[]) => {
+            handler(...args);
+        };
+
+        EventsOn(event, wrappedHandler);
+        this.eventHandlers.set(event, wrappedHandler);
     }
 
     /**
@@ -224,10 +239,12 @@ export class WebSocketService {
      * Emits an event (local only, not to backend)
      */
     private emit(event: string, data?: any): void {
-        const handler = this.eventHandlers.get(event);
-        if (handler) {
-            handler(data);
-        }
+        // Find all handlers that match this event pattern
+        this.eventHandlers.forEach((handler, key) => {
+            if (key === event) {
+                handler(data);
+            }
+        });
     }
 
     /**
